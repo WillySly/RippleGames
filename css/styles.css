@@ -5,6 +5,7 @@
   --accent: #10b981;      /* keep your green accent */
   --card: #f9f9f9;        /* light card backgrounds */
   --border: #dddddd;      /* light grey borders */
+  --nav-h: 72px;
 }
 
 *{box-sizing:border-box} html,body{margin:0;height:100%} body{font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto; color:var(--fg); background:var(--bg)}
@@ -88,110 +89,6 @@ body {
 .card__hover{position:absolute;top:12px;left:12px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid var(--border);font-size:12px;color:var(--muted);opacity:0;transition:.2s}
 .card:hover .card__hover{opacity:1}
 
-.about{
-  max-width:1100px;
-  margin:0 auto;
-  padding:60px 20px 40px;                        /* inner space */
-  min-height:30vh;                               /* take 30% of viewport */
-}
-.about h2{
-  font-size:clamp(32px,5vw,56px);                /* same size as CHOMPOCALIPSE */
-  font-weight:600;
-  letter-spacing:.02em;
-  margin:0 0 24px;
-}
-.about__text{
-  max-width:620px;                               /* readable width */
-  text-align:left;                               /* left aligned per design */
-  line-height:1.7;
-  color:var(--fg);
-}
-
-/* TEAM (match PDF style) */
-.team{
-  max-width:1100px;
-  margin:0 auto;
-  padding:60px 20px 80px;
-  min-height:30vh;
-}
-.team h2{
-  font-size:clamp(32px,5vw,56px);
-  font-weight:600;
-  letter-spacing:.02em;
-  margin:0 0 36px;
-}
-.team__grid{
-  list-style:none;
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:48px 80px;
-  justify-items:center;
-  padding:0;
-}
-.team__card{
-  background:none; border:none;                  /* remove boxes */
-  text-align:center;
-}
-.team__avatar{
-  width:190px; height:190px;                     /* circle like in PDF */
-  border-radius:50%;
-  object-fit:cover; object-position:center;
-  display:block; margin:0 auto 16px;
-}
-.team__card h3{ margin:0 0 6px; font-size:18px; }
-.team__card p{ margin:0; color:var(--muted); }
-
-/* CONTACT */
-.contact {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 80px 20px;                   /* more space top/bottom, same side padding as About */
-  min-height: 35vh;                     /* a bit taller than About for extra breathing */
-}
-
-.contact h2 {
-  font-size: clamp(32px, 5vw, 56px);
-  font-weight: 600;
-  letter-spacing: .02em;
-  margin: 0 0 24px;
-}
-
-.contact p {
-  max-width: 620px;
-  text-align: left;
-  line-height: 1.7;
-  color: var(--fg);
-}
-
-/* FOOTER */
-.footer{border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1100px;margin:24px auto 30px;padding:16px 20px}
-.footer__left,.footer__right{display:flex;gap:12px;align-items:center}
-
-/* GAME PAGE */
-.game{max-width:1100px;margin:24px auto 40px;padding:0 20px}
-.game__title{font-size:28px;font-weight:800;margin:8px 0 16px}
-.game__framewrap{
-  width:100%;
-  max-width:1100px;        /* optional */
-  margin:0 auto 24px;
-  aspect-ratio:16/9;
-  background:#000;
-  border:1px solid var(--border);
-  border-radius:16px;
-  overflow:hidden;
-}
-.game__iframe{
-  width:100%;
-  height:100%;
-  display:block;
-  border:0;
-}
-
-/* RESPONSIVE */
-@media (max-width:900px){
-  .hero{grid-template-columns:1fr}
-}
-
 /* Featured banner */
 .featured {
   width: 100%;
@@ -262,6 +159,116 @@ body {
   box-shadow: 0 6px 18px rgba(16,185,129,.35);
 }
 .btn--primary:hover { box-shadow: 0 8px 24px rgba(16,185,129,.45); }
+
+.about{
+  max-width:1100px;
+  margin:0 auto;
+  padding:60px 20px 40px;                        /* inner space */
+  min-height:30vh;                               /* take 30% of viewport */
+}
+.about h2{
+  font-size:clamp(32px,5vw,56px);                /* same size as CHOMPOCALIPSE */
+  font-weight:600;
+  letter-spacing:.02em;
+  margin:0 0 24px;
+}
+.about__text{
+  max-width:620px;                               /* readable width */
+  text-align:left;                               /* left aligned per design */
+  line-height:1.7;
+  color:var(--fg);
+}
+
+/* TEAM (match PDF style) */
+.team{
+  max-width:1100px;
+  margin:0 auto;
+  padding:60px 20px 80px;
+  min-height:30vh;
+}
+.team h2{
+  font-size:clamp(32px,5vw,56px);
+  font-weight:600;
+  letter-spacing:.02em;
+  margin:0 0 36px;
+}
+.team__grid{
+  list-style:none;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:48px 80px;
+  justify-items:center;
+  padding:0;
+}
+.team__card{
+  background:none; border:none;                  /* remove boxes */
+  text-align:center;
+}
+.team__avatar{
+  width:190px; height:190px;                     /* circle like in PDF */
+  border-radius:50%;
+  object-fit:cover; object-position:center;
+  display:block; margin:0 auto 16px;
+}
+.team__card h3{ margin:0 0 6px; font-size:18px; }
+.team__card p{ margin:0; color:var(--muted); }
+
+.footer--game .footer__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* CONTACT */
+.contact {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 80px 20px;                   /* more space top/bottom, same side padding as About */
+  min-height: 35vh;                     /* a bit taller than About for extra breathing */
+}
+
+.contact h2 {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 600;
+  letter-spacing: .02em;
+  margin: 0 0 24px;
+}
+
+.contact p {
+  max-width: 620px;
+  text-align: left;
+  line-height: 1.7;
+  color: var(--fg);
+}
+
+/* FOOTER */
+.footer{border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1100px;margin:24px auto 30px;padding:16px 20px}
+.footer__left,.footer__right{display:flex;gap:12px;align-items:center}
+
+/* GAME PAGE */
+.game{max-width:none;margin:0 auto;padding:0}
+.game__title{font-size:28px;font-weight:800;margin:8px 0 16px}
+.game__framewrap{
+  width: 100vw;
+  margin-left: calc(50% - 50vw);   /* full width despite parent max-width */
+  margin-right: calc(50% - 50vw);
+  height: calc(60vh);  /* fill viewport below navbar */
+  background: #000;
+  overflow: hidden;
+}
+.game__iframe{
+  width:100%;
+  height:100%;
+  display:block;
+  border:none;
+  overflow: hidden; /* hides scrollbars inside iframe viewport */
+}
+
+
+/* RESPONSIVE */
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr}
+}
+
 .footer--game {
   display: flex;
   justify-content: center;   /* center horizontally */
@@ -270,8 +277,4 @@ body {
   padding: 20px;
 }
 
-.footer--game .footer__left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+
