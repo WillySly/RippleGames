@@ -1,480 +1,99 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ripple Games</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .logo {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        nav {
-            display: flex;
-            gap: 30px;
-            align-items: center;
-        }
-
-        nav a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: opacity 0.3s;
-        }
-
-        nav a:hover {
-            opacity: 0.8;
-        }
-
-        .lang-switch {
-            display: flex;
-            gap: 10px;
-        }
-
-        .page {
-            display: none;
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Home Page Styles */
-        .hero {
-            text-align: center;
-            padding: 80px 0;
-            color: white;
-        }
-
-        .hero h1 {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 40px;
-            opacity: 0.9;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin: 60px 0;
-        }
-
-        .game-card {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            transition: transform 0.3s, box-shadow 0.3s;
-            cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .game-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-
-        .game-card h3 {
-            color: white;
-            font-size: 2rem;
-            margin-bottom: 15px;
-        }
-
-        .game-card p {
-            color: rgba(255,255,255,0.8);
-            line-height: 1.6;
-        }
-
-        .play-btn {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .play-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 25px rgba(255,107,107,0.4);
-        }
-
-        .about-section {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            margin: 40px 0;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .about-section h2 {
-            color: white;
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-        }
-
-        .about-text {
-            color: rgba(255,255,255,0.9);
-            font-size: 1.1rem;
-            line-height: 1.8;
-            text-align: justify;
-        }
-
-        .team-section {
-            margin: 60px 0;
-        }
-
-        .team-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-        }
-
-        .team-member {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .team-member h4 {
-            color: white;
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-
-        .team-member p {
-            color: rgba(255,255,255,0.8);
-            font-style: italic;
-        }
-
-        .contact-info {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 30px;
-            margin: 30px 0;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .contact-info h3 {
-            color: white;
-            margin-bottom: 15px;
-        }
-
-        .contact-info p {
-            color: rgba(255,255,255,0.9);
-            margin-bottom: 10px;
-        }
-
-        /* Game Page Styles */
-        .game-container {
-            text-align: center;
-            padding: 40px 0;
-        }
-
-        .game-title {
-            color: white;
-            font-size: 3rem;
-            margin-bottom: 30px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .game-iframe {
-            width: 100%;
-            max-width: 800px;
-            height: 600px;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            background: #000;
-        }
-
-        .back-btn {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-            padding: 12px 25px;
-            border-radius: 25px;
-            cursor: pointer;
-            margin: 20px;
-            transition: all 0.3s;
-        }
-
-        .back-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            .hero p { font-size: 1.1rem; }
-            .games-grid { grid-template-columns: 1fr; }
-            .game-iframe { height: 400px; }
-            nav { gap: 15px; }
-            .container { padding: 10px; }
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ripple Games</title>
+  <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="logo">RIPPLE GAMES</div>
-            <nav>
-                <a href="#" onclick="showPage('home')">Our Games</a>
-                <a href="#" onclick="showPage('home')">About Us</a>
-                <a href="#" onclick="showPage('home')">Contact</a>
-                <div class="lang-switch">
-                    <span style="color: white;">EN</span>
-                    <span style="color: rgba(255,255,255,0.6);">|</span>
-                    <span style="color: rgba(255,255,255,0.6);">GE</span>
-                </div>
-            </nav>
-        </header>
-
-        <!-- Home Page -->
-        <div id="home" class="page active">
-            <section class="hero">
-                <h1>Welcome to Ripple Games</h1>
-                <p>Innovative gaming experiences that create ripples of engagement and discovery</p>
-            </section>
-
-            <div class="games-grid">
-                <div class="game-card" onclick="showPage('chompocalipse')">
-                    <h3>CHOMPOCALIPSE</h3>
-                    <p>An exciting adventure where every choice creates ripples through the game world. Experience dynamic gameplay that adapts to your decisions.</p>
-                    <button class="play-btn">PLAY NOW</button>
-                </div>
-            </div>
-
-            <section class="about-section">
-                <h2>ABOUT US</h2>
-                <p class="about-text">
-                    We are passionate game developers dedicated to creating immersive experiences that push the boundaries of interactive entertainment. Our team combines creativity with cutting-edge technology to deliver games that not only entertain but also engage players on a deeper level. Every game we create is designed to generate meaningful interactions and lasting memories.
-                </p>
-            </section>
-
-            <section class="team-section">
-                <h2 style="color: white; text-align: center; margin-bottom: 40px; font-size: 2.5rem;">MEET THE TEAM</h2>
-                <div class="team-grid">
-                    <div class="team-member">
-                        <h4>MARIA TARIELASHVILI</h4>
-                        <p>Co-founder | Dragon Slayer</p>
-                    </div>
-                    <div class="team-member">
-                        <h4>ZIZI NISHNIANIDZE</h4>
-                        <p>Co-founder | Amateur Oracle</p>
-                    </div>
-                </div>
-            </section>
-
-            <div class="contact-info">
-                <h3>CONTACT US</h3>
-                <p>E-mail: blabla@somethinggames.com</p>
-                <p>Ready to embark on your next gaming adventure? Get in touch with us!</p>
-            </div>
-        </div>
-
-        <!-- Game Page -->
-        <div id="chompocalipse" class="page">
-            <button class="back-btn" onclick="showPage('home')">← Back to Games</button>
-            
-            <div class="game-container">
-                <h1 class="game-title">CHOMPOCALIPSE</h1>
-                
-                <!-- Pre-game Form (shown initially) -->
-                <div id="pre-game-form" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 30px; margin: 20px auto; max-width: 500px; border: 1px solid rgba(255,255,255,0.2);">
-                    <h3 style="color: white; margin-bottom: 20px;">Before You Play</h3>
-                    <p style="color: rgba(255,255,255,0.9); margin-bottom: 20px;">Help us improve the game by sharing some anonymous information:</p>
-                    
-                    <form id="playerForm" style="text-align: left;">
-                        <div style="margin-bottom: 15px;">
-                            <label style="color: white; display: block; margin-bottom: 5px;">Age Range:</label>
-                            <select id="ageRange" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
-                                <option value="">Select age range</option>
-                                <option value="under-18">Under 18</option>
-                                <option value="18-24">18-24</option>
-                                <option value="25-34">25-34</option>
-                                <option value="35-44">35-44</option>
-                                <option value="45-54">45-54</option>
-                                <option value="55+">55+</option>
-                            </select>
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <label style="color: white; display: block; margin-bottom: 5px;">Gaming Experience:</label>
-                            <select id="gamingExp" style="width: 100%; padding: 10px; border-radius: 5px; border: none;">
-                                <option value="">Select experience level</option>
-                                <option value="beginner">Beginner</option>
-                                <option value="casual">Casual Player</option>
-                                <option value="regular">Regular Player</option>
-                                <option value="hardcore">Hardcore Gamer</option>
-                            </select>
-                        </div>
-                        
-                        <button type="button" onclick="startGame()" style="width: 100%; padding: 15px; background: linear-gradient(45deg, #ff6b6b, #ee5a24); color: white; border: none; border-radius: 25px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 20px;">
-                            Start Game
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Game iframe (hidden initially) -->
-                <div id="game-area" style="display: none;">
-                    <!-- Replace this with your actual Unity WebGL build -->
-                    <iframe id="gameFrame" class="game-iframe" src="about:blank"></iframe>
-                    <p style="color: rgba(255,255,255,0.8); margin-top: 20px;">
-                        Replace the iframe src with your Unity WebGL build URL
-                    </p>
-                </div>
-            </div>
-        </div>
+<header class="nav">
+  <div class="nav__inner">
+    <div class="nav__left">
+      <img src="/img/logo.png" alt="Ripple Games logo" class="logo" />
+      <a class="nav__link is-active" href="/">Ripple Games</a>
     </div>
+    
+    <nav class="nav__right">
+      <a class="nav__link" href="#about">About Us</a>
+      <a class="nav__link" href="#contact">Contact</a>
+      <span class="nav__lang">EN <span aria-hidden="true">|</span> GE</span>
+    </nav>
+  </div>
+</header>
 
-    <script>
-        let currentSession = null;
-        let gameStartTime = null;
+<main>
+  <!-- Hero / intro -->
+  <section class="hero">
+    <div class="hero__left">
+      <div class="hero__branding">
+        <img src="/img/logo.png" alt="Ripple Games logo" class="hero__biglogo" />
+        <span class="hero__brandname">Ripple Games</span>
+      </div>
+      <p class="hero__small">Small description</p>
+    </div>
+  </section>
 
-        function showPage(pageId) {
-            // Hide all pages
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
-            
-            // Show selected page
-            document.getElementById(pageId).classList.add('active');
-        }
 
-        function startGame() {
-            const ageRange = document.getElementById('ageRange').value;
-            const gamingExp = document.getElementById('gamingExp').value;
-            
-            if (!ageRange || !gamingExp) {
-                alert('Please fill in all fields before starting the game.');
-                return;
-            }
+  <!-- Featured game -->
+  <section id="featured" class="featured">
+    <div class="featured__card">
+      <img src="/img/chompocalypse.jpg" alt="Chompocalypse" class="featured__image" />
+      <div class="featured__overlay"></div>
 
-            // Generate unique session ID
-            currentSession = {
-                id: 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                ageRange: ageRange,
-                gamingExperience: gamingExp,
-                mistakes: 0,
-                startTime: Date.now()
-            };
+      <div class="featured__content">
+        <h2 class="featured__title">CHOMPOCALIPSE</h2>
+        <p class="featured__desc">Small description of the game</p>
+        <a href="/RippleGames/game-chompocalypse.html" class="btn btn--primary">PLAY</a>
+      </div>
+    </div>
+  </section>
+  
+  
+  <!-- About -->
+  <section id="about" class="about">
+    <h2>ABOUT US</h2>
+    <p class="about__text">
+      Smth to say about us<br/><br/>
+      Text about who we are and stuff. txt should be justified and aligned to the left.
+    </p>
+  </section>
 
-            // Hide form and show game
-            document.getElementById('pre-game-form').style.display = 'none';
-            document.getElementById('game-area').style.display = 'block';
-            
-            // Load your Unity game here
-            // document.getElementById('gameFrame').src = 'path/to/your/unity/webgl/build/index.html';
-            
-            gameStartTime = Date.now();
-            console.log('Game session started:', currentSession);
-        }
+  <!-- Team -->
+  <section class="team">
+    <h2>MEET THE TEAM</h2>
+    <ul class="team__grid">
+      <li class="team__card">
+        <img src="/img/team1.jpg" alt="Maria Tarielashvili" class="team__avatar">
+        <h3>MARIA TARIELASHVILI</h3>
+        <p>Co-founder | Dragon slayer</p>
+      </li>
+      <li class="team__card">
+        <img src="/img/team2.jpg" alt="Zizi Nishnianidze" class="team__avatar">
+        <h3>ZIZI NISHNIANIDZE</h3>
+        <p>Co-founder | Amateur oracle</p>
+      </li>
+    </ul>
+  </section>
 
-        // Function to be called by Unity game to record mistakes
-        function recordMistake() {
-            if (currentSession) {
-                currentSession.mistakes++;
-                console.log('Mistake recorded. Total mistakes:', currentSession.mistakes);
-            }
-        }
+  <!-- Contact -->
+  <section id="contact" class="contact">
+    <h2>CONTACT US</h2>
+    <p>E-mail: <a href="mailto:blabla@somethinggames.com">blabla@somethinggames.com</a></p>
+    <p>Additional contact info</p>
+  </section>
+</main>
 
-        // Function to be called when game ends
-        function endGame(completed = false) {
-            if (!currentSession) return;
-
-            const playTime = Math.round((Date.now() - gameStartTime) / 1000); // in seconds
-            
-            const gameData = {
-                sessionId: currentSession.id,
-                playTime: playTime,
-                mistakes: currentSession.mistakes,
-                completed: completed,
-                additionalData: {
-                    ageRange: currentSession.ageRange,
-                    gamingExperience: currentSession.gamingExperience,
-                    endTime: new Date().toISOString()
-                }
-            };
-
-            // Send data to backend
-            fetch('/api/game-data', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(gameData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Game data saved:', data);
-            })
-            .catch(error => {
-                console.error('Error saving game data:', error);
-            });
-
-            // Reset session
-            currentSession = null;
-            gameStartTime = null;
-        }
-
-        // Example: Auto-end game after 5 minutes (remove this in production)
-        // setTimeout(() => endGame(false), 300000);
-    </script>
+<footer class="footer">
+  <div class="footer__left">
+    <img src="/img/logo.png" alt="Ripple Games logo" class="logo logo--sm" />
+    <span>LOGOS &amp; Disclaimer</span>
+  </div>
+  <div class="footer__right">
+    <a class="nav__link" href="#about">About Us</a>
+    <a class="nav__link" href="#contact">Contact</a>
+    <span class="nav__lang">EN <span aria-hidden="true">|</span> GE</span>
+  </div>
+</footer>
 </body>
 </html>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="518ff96c-fdb4-451b-992f-1f73bdbb6088" name="RippleGamesServer" url="http://localhost">
+        <fileTransfer mountedRoot="W:\Projects\E-Waste\RippleGames" accessType="MOUNT" port="0" />
+      </webServer>
+    </option>
+  </component>
+</project>
