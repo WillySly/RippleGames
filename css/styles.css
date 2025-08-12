@@ -250,7 +250,7 @@ body {
 .game__framewrap{
   width:100vw;
   margin-left:calc(50% - 50vw);
-  height:calc(100vh - var(--nav-h));
+  height:calc(60vh);
   background:#000;
   overflow:hidden;
 }
