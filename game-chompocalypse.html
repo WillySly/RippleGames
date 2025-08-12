@@ -47,22 +47,23 @@
 
     if (!iframe || !container) return;
 
-    // Get container dimensions (your fixed iframe area)
+    // Get container dimensions
     const containerWidth = container.offsetWidth;
     const containerHeight = container.offsetHeight;
 
-    // Keep iframe the same size as container - FIXED SIZE
+    // Set iframe to match container size
     iframe.style.width = containerWidth + 'px';
     iframe.style.height = containerHeight + 'px';
 
-    // Try to inject CSS into iframe content (may not work due to CORS)
+    // Inject universal CSS to handle any content type
     iframe.onload = function() {
       try {
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
         if (iframeDoc) {
           const styleElement = iframeDoc.createElement('style');
           styleElement.textContent = `
-          html, body {
+            /* Universal container setup */
+            html, body {
               margin: 0 !important;
               padding: 0 !important;
               overflow: hidden !important;
@@ -72,31 +73,71 @@
               align-items: center !important;
               justify-content: center !important;
               background: #000 !important;
-          }
-          canvas {
-            max-width: 100% !important;
-            max-height: 100% !important;
-            width: auto !important;
-            height: auto !important;
-            object-fit: contain !important;
-            margin: 0 auto !important;
-            left: 50%; transform: translateX(-50%);
-          }
-          #unity-container {
-            width: 100% !important;
-            height: 100% !important;
-          }
-        `;
+            }
+            
+            /* Universal content elements - preserve aspect ratio */
+            canvas, video, img, svg, object, embed {
+              max-width: 100% !important;
+              max-height: 100% !important;
+              width: auto !important;
+              height: auto !important;
+              object-fit: contain !important;
+              display: block !important;
+              margin: 0 auto !important;
+            }
+            
+            /* Common game engine containers */
+            #unity-container, 
+            #gameContainer,
+            #game-container,
+            .game-container,
+            .unity-container,
+            [id*="game"],
+            [class*="game"],
+            [id*="unity"],
+            [class*="unity"],
+            main,
+            .main-content {
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              width: 100% !important;
+              height: 100% !important;
+              max-width: 100% !important;
+              max-height: 100% !important;
+            }
+            
+            /* Force any direct body children to center */
+            body > * {
+              margin: 0 auto !important;
+              max-width: 100% !important;
+              max-height: 100% !important;
+            }
+            
+            /* Prevent any element from overflowing */
+            * {
+              box-sizing: border-box !important;
+              max-width: 100% !important;
+              max-height: 100% !important;
+            }
+            
+            /* Special handling for iframes within iframes */
+            iframe {
+              max-width: 100% !important;
+              max-height: 100% !important;
+              width: auto !important;
+              height: auto !important;
+            }
+          `;
           iframeDoc.head.appendChild(styleElement);
         }
       } catch (e) {
-        console.log('Cannot inject CSS due to CORS. Content should handle scaling internally.');
+        console.log('Cannot inject CSS due to CORS. Content should handle aspect ratio internally.');
       }
     };
 
     console.log(`Container: ${containerWidth}x${containerHeight}`);
-    console.log(`iframe: ${containerWidth}x${containerHeight} (same as container)`);
-    console.log('Game content will scale to fit iframe height while preserving ratio');
+    console.log('Game will maintain aspect ratio and fit within iframe bounds');
   }
 
   // Run on load and resize
