@@ -40,74 +40,66 @@
 </footer>
 
 <script>
-  (function fitAnyUnity(iframeId){
-    const iframe = document.getElementById(iframeId);
+  // Iframe scaling script
+  function scaleIframe() {
+    const iframe = document.getElementById('gameFrame');
+    const container = document.querySelector('.game__framewrap');
 
-    function getDoc(){ return iframe.contentDocument || iframe.contentWindow?.document; }
-    function getCanvas(doc){
-      return doc.getElementById('unity-canvas')
-              || doc.querySelector('canvas[id*="unity"]')
-              || doc.querySelector('canvas');
-    }
-    function getIntrinsicSize(canvas){
-      const w = +canvas.getAttribute('width')  || canvas.width  || 960;
-      const h = +canvas.getAttribute('height') || canvas.height || 600;
-      return {w,h};
-    }
-    function fit(){
-      const doc = getDoc(); if(!doc) return;
-      const canvas = getCanvas(doc); if(!canvas) return;
+    if (!iframe || !container) return;
 
-      // prevent inner scrollbars
-      doc.documentElement.style.overflow = 'hidden';
-      doc.body.style.overflow = 'hidden';
+    // Get container dimensions (your fixed iframe area)
+    const containerWidth = container.offsetWidth;
+    const containerHeight = container.offsetHeight;
 
-      // read natural render size
-      const {w:cw,h:ch} = getIntrinsicSize(canvas);
+    // Keep iframe the same size as container - FIXED SIZE
+    iframe.style.width = containerWidth + 'px';
+    iframe.style.height = containerHeight + 'px';
 
-      // size of our iframe viewport
-      const rect = iframe.getBoundingClientRect();
-      const scale = Math.min(rect.width/cw, rect.height/ch);
-
-      // ensure the canvas isn't already stretched by inner CSS
-      Object.assign(canvas.style, {
-        position: 'absolute',
-        width:  cw+'px',
-        height: ch+'px',
-        transformOrigin: 'top left',
-        transform: `scale(${scale})`
-      });
-
-      // center it (letterbox)
-      const x = (rect.width  - cw*scale)/2;
-      const y = (rect.height - ch*scale)/2;
-      canvas.style.left = Math.max(0, x) + 'px';
-      canvas.style.top  = Math.max(0, y) + 'px';
-
-      // make sure its parent doesn't add layout
-      const container = canvas.parentElement;
-      if (container){
-        Object.assign(container.style, {
-          position:'absolute', inset:'0', overflow:'hidden', background:'#000'
-        });
+    // Try to inject CSS into iframe content (may not work due to CORS)
+    iframe.onload = function() {
+      try {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        if (iframeDoc) {
+          const styleElement = iframeDoc.createElement('style');
+          styleElement.textContent = `
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            width: 100vw !important;
+            height: 100vh !important;
+          }
+          canvas {
+            height: 100% !important;
+            object-fit: contain !important;
+          }
+          #unity-container {
+            width: 100% !important;
+            height: 100% !important;
+          }
+        `;
+          iframeDoc.head.appendChild(styleElement);
+        }
+      } catch (e) {
+        console.log('Cannot inject CSS due to CORS. Content should handle scaling internally.');
       }
-    }
+    };
 
-    iframe.addEventListener('load', () => {
-      // try repeatedly while Unity boots (canvas may appear/resize)
-      let tries = 0;
-      const t = setInterval(()=>{ fit(); if(++tries>80) clearInterval(t); },100);
+    console.log(`Container: ${containerWidth}x${containerHeight}`);
+    console.log(`iframe: ${containerWidth}x${containerHeight} (same as container)`);
+    console.log('Game content will scale to fit iframe height while preserving ratio');
+  }
 
-      // observe inner changes (Unity swaps sizes)
-      const doc = getDoc(); if(doc){
-        new MutationObserver(fit).observe(doc.documentElement,{subtree:true,attributes:true,childList:true});
-      }
+  // Run on load and resize
+  window.addEventListener('load', scaleIframe);
+  window.addEventListener('resize', scaleIframe);
 
-      // refit when outer size changes
-      new ResizeObserver(fit).observe(iframe);
-      window.addEventListener('resize', fit);
-    });
-  })('gameFrame');
+  // Run immediately if DOM is already loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scaleIframe);
+  } else {
+    scaleIframe();
+  }
 </script>
 
 </body>
