@@ -125,28 +125,3 @@
     </script>
   </body>
 </html>
-
-<style>
-  html, body {
-    height: 100%;
-    margin: 0;
-    overflow: hidden; /* no scrollbars inside game */
-  }
-
-  #unity-container {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    justify-content: center; /* center horizontally */
-    align-items: center;     /* center vertically */
-    background: #000;        /* letterbox/pillarbox background */
-  }
-
-  canvas#unity-canvas {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto !important;   /* let browser calculate width based on height */
-    display: block;
-  }
-
-</style>
