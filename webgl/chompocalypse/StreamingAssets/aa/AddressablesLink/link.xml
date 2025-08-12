@@ -26,6 +26,7 @@
     <type fullname="Poster" preserve="all" />
     <type fullname="RepairShop" preserve="all" />
     <type fullname="RestartManager" preserve="all" />
+    <type fullname="StreakManager" preserve="all" />
     <type fullname="TintHighlight" preserve="all" />
     <type fullname="Tooltip" preserve="all" />
     <type fullname="TrashController" preserve="all" />
