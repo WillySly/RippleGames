@@ -253,35 +253,14 @@ body {
   height:calc(100vh - var(--nav-h));
   background:#000;
   overflow:hidden;
-  position:relative;
 }
 .game__iframe{
   width:100%;
   height:100%;
   border:0;
   display:block;
-  transform-origin:0 0;
+  overflow:hidden;
 }
-
-/* Responsive iframe scaling */
-@media (min-aspect-ratio: 16/9) {
-  /* When viewport is wider than 16:9, scale based on height */
-  .game__iframe {
-    height: 100%;
-    width: calc(100vh * 16/9 - var(--nav-h) * 16/9);
-    margin: 0 auto;
-  }
-}
-
-@media (max-aspect-ratio: 16/9) {
-  /* When viewport is taller than 16:9, scale based on width */
-  .game__iframe {
-    width: 100%;
-    height: calc(100vw * 9/16);
-    margin: 0 auto;
-  }
-}
-
 
 /* RESPONSIVE */
 @media (max-width:900px){
