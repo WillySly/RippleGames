@@ -4,20 +4,20 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Ripple Games</title>
-  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+
 <header class="nav">
   <div class="nav__inner">
     <div class="nav__left">
       <img src="/img/logo.png" alt="Ripple Games logo" class="logo" />
-      <a class="nav__link is-active" href="/">Ripple Games</a>
     </div>
     
     <nav class="nav__right">
+      <a class="nav__link" href="#about">Our Games</a>
       <a class="nav__link" href="#about">About Us</a>
       <a class="nav__link" href="#contact">Contact</a>
-      <span class="nav__lang">EN <span aria-hidden="true">|</span> GE</span>
     </nav>
   </div>
 </header>
@@ -25,12 +25,10 @@
 <main>
   <!-- Hero / intro -->
   <section class="hero">
-    <div class="hero__left">
-      <div class="hero__branding">
-        <img src="/img/logo.png" alt="Ripple Games logo" class="hero__biglogo" />
-        <span class="hero__brandname">Ripple Games</span>
-      </div>
+    <div class="hero__branding">
+      <span class="hero__brandname">Ripple Games</span>
       <p class="hero__small">Small description</p>
+      <img src="/img/BigLogo.png" alt="Ripple Games logo" class="hero__biglogo" />
     </div>
   </section>
 
@@ -44,19 +42,21 @@
       <div class="featured__content">
         <h2 class="featured__title">CHOMPOCALIPSE</h2>
         <p class="featured__desc">Small description of the game</p>
-        <a href="/game-chompocalypse.html" class="btn btn--primary">PLAY</a>
+          <a href="/game-chompocalypse.html" class="btn btn--primary">PLAY</a>
       </div>
     </div>
   </section>
   
   
   <!-- About -->
-  <section id="about" class="about">
-    <h2>ABOUT US</h2>
-    <p class="about__text">
-      Smth to say about us<br/><br/>
-      Text about who we are and stuff. txt should be justified and aligned to the left.
-    </p>
+  <section class="about">
+    <div class="about__illu"></div>
+    <div class="about__content">
+      <h2 class="about__title">About Us</h2>
+      <p class="about__text">
+        This is the description text. It explains who you are, what you do, and why people should care.
+      </p>
+    </div>
   </section>
 
   <!-- Team -->
@@ -64,12 +64,12 @@
     <h2>MEET THE TEAM</h2>
     <ul class="team__grid">
       <li class="team__card">
-        <img src="/img/team1.jpg" alt="Maria Tarielashvili" class="team__avatar">
+        <img src="/img/maria.png" alt="Maria Tarielashvili" class="team__avatar">
         <h3>MARIA TARIELASHVILI</h3>
         <p>Co-founder | Dragon slayer</p>
       </li>
       <li class="team__card">
-        <img src="/img/team2.jpg" alt="Zizi Nishnianidze" class="team__avatar">
+        <img src="/img/zizi.png" alt="Zizi Nishnianidze" class="team__avatar">
         <h3>ZIZI NISHNIANIDZE</h3>
         <p>Co-founder | Amateur oracle</p>
       </li>
@@ -78,22 +78,9 @@
 
   <!-- Contact -->
   <section id="contact" class="contact">
-    <h2>CONTACT US</h2>
-    <p>E-mail: <a href="mailto:blabla@somethinggames.com">blabla@somethinggames.com</a></p>
-    <p>Additional contact info</p>
+<!--    <h2>CONTACT US</h2>-->
+<!--    <p>E-mail: <a href="mailto:blabla@somethinggames.com">blabla@somethinggames.com</a></p>-->
+<!--    <p>Additional contact info</p>-->
   </section>
 </main>
 
-<footer class="footer">
-  <div class="footer__left">
-    <img src="/img/logo.png" alt="Ripple Games logo" class="logo logo--sm" />
-    <span>LOGOS &amp; Disclaimer</span>
-  </div>
-  <div class="footer__right">
-    <a class="nav__link" href="#about">About Us</a>
-    <a class="nav__link" href="#contact">Contact</a>
-    <span class="nav__lang">EN <span aria-hidden="true">|</span> GE</span>
-  </div>
-</footer>
-</body>
-</html>

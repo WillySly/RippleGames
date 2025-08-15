@@ -1,35 +1,49 @@
 :root {
-  --bg: #ffffff;          /* white background */
-  --fg: #444444;          /* dark grey text */
-  --muted: #555555;       /* softer grey for secondary text */
-  --accent: #10b981;      /* keep your green accent */
-  --card: #f9f9f9;        /* light card backgrounds */
-  --border: #dddddd;      /* light grey borders */
+  --fg: #fff;          /* primary text color */
+  --muted: rgba(255,255,255,0.75);  /* softer white for secondary text */
+  --accent: #DC4A26;   /* keep your accent color */
+  --card: rgba(255,255,255,0.05); /* subtle dark translucent for cards */
+  --border: rgba(255,255,255,0.15); /* subtle white border */
   --nav-h: 72px;
+  --btn-shadow: rgba(220,80,60,.35);
 }
 
-*{box-sizing:border-box} html,body{margin:0;height:100%} body{font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto; color:var(--fg); background:var(--bg)}
+*{box-sizing:border-box} html,body{margin:0;height:100%} body{font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto; color:var(--fg); }
 a{color:inherit;text-decoration:none} img{display:block;max-width:100%}
 body {
-  padding-top: 72px; /* match nav height */
+  margin: 0;
+  padding-top: var(--nav-h); /* use your defined nav height */
+  background-color: #000; /* or same as nav/hero edge color */
+  font-family: 'FiraGo-Book', FiraGo, sans-serif; /* use your preferred font */
 }
 .logo{height:36px} .logo--sm{height:28px}
 
 /* NAV */
-.nav{
-  position:fixed; top:0; left:0; right:0; z-index:1000;
-  border-bottom:1px solid var(--border);
-  background:var(--bg);
-  /* no max-width, no margin, no horizontal padding here */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: var(--nav-h);
+
+  background-image: url('../img/bgnav.png');
+  background-size: cover; /* stretch to fill both width and height */
+  background-position:left;
+  background-repeat: no-repeat;
+
+  /* NEW: ensure it spans the full viewport height of its own row */
+  background-color: #000; /* fallback if image doesn't load */
 }
 
-/* Inner wrapper to limit content width while nav spans full width */
-.nav__inner{
-  max-width:1100px;
-  margin:0 auto;
-  width:100%;
-  padding:16px 20px;                  /* same horizontal padding everywhere */
-  display:flex; justify-content:space-between; align-items:center;
+.nav__inner {
+  max-width: 1100px;
+  margin: 0 auto;          /* centers the content inside */
+  width: 100%;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .nav__left {
@@ -40,7 +54,7 @@ body {
 
 .nav__right {
   display: flex;
-  gap: 24px;
+  gap: 5vw;
   align-items: center;
 }
 
@@ -57,17 +71,30 @@ body {
   opacity: .7;
 }
 
-/* HERO */
-.hero{max-width:1100px;margin:24px auto 40px;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;padding:0 20px; min-height: 40vh;}
-.hero__branding {
-  display: flex;
-  align-items: center;
-  gap: 16px; /* space between logo and text */
-  margin-bottom: 16px;
+.hero {
+  display: flex;                /* simpler than grid for centered content */
+  flex-direction: column;       /* stack children vertically */
+  justify-content: center;      /* center vertically */
+  align-items: center;          /* center horizontally */
+  text-align: center;           /* center text */
+  padding: 0 20px;
+  min-height: 40vh;
+  margin-top: 0;
+
+  background-image: url('../img/bg1.png');
+  background-size: cover;       /* keep ratio while covering area */
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-.hero__biglogo {
-  height: 20vh; /* adjust as needed */
+.hero__branding {
+  display: flex;
+  flex-direction: column;       /* stack brandname and logo vertically */
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-family: 'Barbu', sans-serif; /* use your preferred font */
+
 }
 
 .hero__brandname {
@@ -75,155 +102,273 @@ body {
   font-weight: 600;
   color: var(--fg);
 }
-.hero__title{margin:12px 0 4px;font-size:28px;font-weight:700}
-.hero__small{color:var(--muted);margin-bottom:12px}
-.hero__tag{font-weight:700; letter-spacing:.08em; color:var(--accent)}
 
-/* CARD */
-.card{position:relative;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;min-height:320px}
-.card__image{height:100%;background:linear-gradient(135deg,#1f2937 0%,#0f172a 100%)}
-.card__overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;gap:12px;padding:20px;background:linear-gradient(0deg,rgba(0,0,0,.55) 30%,transparent 70%)}
-.card__title{font-size:24px;font-weight:800}
-.btn{display:inline-block;border:1px solid var(--border);background:#111827;color:var(--fg);padding:10px 18px;border-radius:12px}
-.btn--primary{background:var(--accent);color:#05140e;border:0;font-weight:700}
-.card__hover{position:absolute;top:12px;left:12px;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid var(--border);font-size:12px;color:var(--muted);opacity:0;transition:.2s}
-.card:hover .card__hover{opacity:1}
+.hero__small {
+  color: var(--muted);
+  margin-bottom: 20px;          /* space before logo */
+}
 
-/* Featured banner */
+.hero__biglogo {
+  height: 20vh;
+}
+
+/* =========================
+   CARD
+========================= */
+.card {
+  position: relative;
+  background: var(--card);
+  overflow: hidden;
+  min-height: 320px;
+}
+
+.card__image {
+  height: 100%;
+  background: linear-gradient(135deg, #1f2937 0%, #0f172a 100%);
+}
+
+.card__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px;
+  background: linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.55) 30%,
+          transparent 70%
+  );
+}
+
+.card__title {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+
+.card__hover {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.card:hover .card__hover {
+  opacity: 1;
+}
+
+/* =========================
+   FEATURED BANNER
+========================= */
 .featured {
   width: 100%;
-  margin: 24px 0 72px;
 }
+
 .featured__card {
   position: relative;
   width: 100%;
-  /* Fixed vertical size but responsive: min 260px, scales with viewport, caps at 520px */
-  height: clamp(260px, 40vw, 520px);
-  border-radius: 16px;
+  height: clamp(260px, 40vw, 520px); /* min, responsive, max */
   overflow: hidden;
-  border: 1px solid var(--border, #242534);
   background: #000;
 }
+
 .featured__image {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;     /* force image to fill frame without distortion */
+  object-fit: cover;   /* fill frame without distortion */
   object-position: center;
 }
+
 .featured__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, rgba(0,0,0,.55) 20%, rgba(0,0,0,.15) 60%, rgba(0,0,0,.55) 100%);
+  background: linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.55) 20%,
+          rgba(0, 0, 0, 0.15) 60%,
+          rgba(0, 0, 0, 0.55) 100%
+  );
 }
+
 .featured__content {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  gap: 10px;
-  padding: 16px;
-  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;      /* keep them vertically centered as a group */
+  align-items: flex-start;      /* left-align everything */
+  text-align: left;
+  padding: 16px 40px;
+  color: var(--fg);
+  gap: 20px;                     /* NEW: equal spacing between all children */
 }
+
 .featured__title {
   font-size: clamp(28px, 5vw, 56px);
   font-weight: 600;
-  letter-spacing: .02em;
+  letter-spacing: 0.02em;
 }
+
 .featured__desc {
-  color: #e6e6e6;
   max-width: 720px;
-  margin: 0 auto 6px;
 }
 
 /* Button */
 .btn {
   display: inline-block;
-  padding: 12px 24px;
+  padding: 5px 50px;
   border-radius: 999px;
+  font-size: 1.4rem;
   border: 1px solid rgba(255,255,255,.25);
-  font-weight: 700;
+  font-weight: 1000;
   text-transform: uppercase;
   letter-spacing: .05em;
   background: rgba(255,255,255,.08);
-  color: #fff;
+  color: var(--fg);
   transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
 }
 .btn:hover { transform: translateY(-1px); }
 .btn--primary {
   background: var(--accent, #10b981);
-  color: #05140e;
+  color: var(--fg);
   border-color: transparent;
-  box-shadow: 0 6px 18px rgba(16,185,129,.35);
+  box-shadow: 0 6px 18px var(--btn-shadow);
 }
-.btn--primary:hover { box-shadow: 0 8px 24px rgba(16,185,129,.45); }
+.btn--primary:hover { box-shadow: 0 8px 24px var(--btn-shadow); }
 
-.about{
-  max-width:1100px;
-  margin:0 auto;
-  padding:60px 20px 40px;                        /* inner space */
-  min-height:30vh;                               /* take 30% of viewport */
-}
-.about h2{
-  font-size:clamp(32px,5vw,56px);                /* same size as CHOMPOCALIPSE */
-  font-weight:600;
-  letter-spacing:.02em;
-  margin:0 0 24px;
-}
-.about__text{
-  max-width:620px;                               /* readable width */
-  text-align:left;                               /* left aligned per design */
-  line-height:1.7;
-  color:var(--fg);
-}
-
-/* TEAM (match PDF style) */
-.team{
-  max-width:1100px;
-  margin:0 auto;
-  padding:60px 20px 80px;
-  min-height:30vh;
-}
-.team h2{
-  font-size:clamp(32px,5vw,56px);
-  font-weight:600;
-  letter-spacing:.02em;
-  margin:0 0 36px;
-}
-.team__grid{
-  list-style:none;
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:48px 80px;
-  justify-items:center;
-  padding:0;
-}
-.team__card{
-  background:none; border:none;                  /* remove boxes */
-  text-align:center;
-}
-.team__avatar{
-  width:190px; height:190px;                     /* circle like in PDF */
-  border-radius:50%;
-  object-fit:cover; object-position:center;
-  display:block; margin:0 auto 16px;
-}
-.team__card h3{ margin:0 0 6px; font-size:18px; }
-.team__card p{ margin:0; color:var(--muted); }
-
-.footer--game .footer__left {
+.about {
+  position: relative;
+  width: 100%;
+  min-height: 50vh;
   display: flex;
   align-items: center;
-  gap: 8px;
+  padding: 60px 20px;
+  background: url('../img/bg2.png') center/cover no-repeat;
+  color: var(--fg);
+  overflow: hidden; /* prevent overlay overflow */
 }
+
+
+/* Content stays above both backgrounds */
+.about__content {
+  position: relative;
+  z-index: 2;
+  max-width: 600px;
+}
+
+.about__title {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 600;
+  margin-bottom: 20px;
+  font-family: 'FiraGo-Heavy', sans-serif; /* use your preferred font */
+}
+
+.about__text {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .about {
+    flex-direction: column;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .about__content {
+    max-width: 90%;
+  }
+}
+
+.team {
+  position: relative;
+  width: 100%;
+  min-height: 30vh;
+  padding: 30px 20px 40px;
+  background: url('../img/bg3.png') center/cover no-repeat; /* full stretch background */
+  color: var(--fg);
+}
+
+.team h2 {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 600;
+  letter-spacing: .02em;
+  margin: 0 0 36px;
+  text-align: center;
+  font-family: 'FiraGo-Heavy', sans-serif; /* use your preferred font */
+
+}
+
+.team__grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 24px;
+  justify-items: center;
+  padding: 0;
+}
+
+.team__card {
+  background: none;
+  border: none;
+  text-align: center;
+  position: relative;
+  z-index: 1; /* sits above background */
+}
+
+.team__avatar {
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  margin: 0 auto 16px;
+  transform: scale(0.75); /* NEW: scales the image down */
+
+}
+
+.team__card h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-family: 'Barbu', sans-serif; /* use your preferred font */
+
+}
+
+.team__card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .team__grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+}
+
+
 /* CONTACT */
 .contact {
   max-width: 1100px;
   margin: 0 auto;
   padding: 80px 20px;                   /* more space top/bottom, same side padding as About */
-  min-height: 35vh;                     /* a bit taller than About for extra breathing */
+  min-height: 35vh;
+  font-family: 'FiraGo-Heavy', sans-serif; /* use your preferred font */
+  /* a bit taller than About for extra breathing */
 }
 
 .contact h2 {
@@ -239,39 +384,23 @@ body {
   line-height: 1.7;
   color: var(--fg);
 }
-
-/* FOOTER */
-.footer{border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1100px;margin:24px auto 30px;padding:16px 20px}
-.footer__left,.footer__right{display:flex;gap:12px;align-items:center}
-
-/* GAME PAGE */
-.game{max-width:none;margin:0 auto;padding:0}
-.game__title{font-size:28px;font-weight:800;margin:8px 0 16px}
-.game__framewrap{
-  width:100vw;
-  margin-left:calc(50% - 50vw);
-  height:60vh;
-  display: flex;                /* use flexbox to center iframe content */
-  align-items: center;          /* center vertically */
-  justify-content: center;      /* center horizontally */
-  overflow: hidden;
-}
-.game__iframe{
-  width:100%;
-  border:0; display:block;
-  align-items: center;
-  align-content: center;
+@font-face {
+  font-family: 'Barbu';
+  src: url('../fonts/BARBERCHOP.OTF') format('otf');  
+  font-weight: normal;
+  font-style: normal;
 }
 
-/* RESPONSIVE */
-@media (max-width:900px){
-  .hero{grid-template-columns:1fr}
+@font-face {
+  font-family: 'FiraGo-Book';
+  src: url('../fonts/FiraGO-Book.otf') format('otf');
+  font-weight: normal;
+  font-style: normal;
 }
 
-.footer--game {
-  display: flex;
-  justify-content: center;   /* center horizontally */
-  align-items: center;
-  gap: 12px;
-  padding: 20px;
+@font-face {
+  font-family: 'FiraGo-Heavy';
+  src: url('../fonts/FiraGO-Heavy.otf') format('otf');
+  font-weight: normal;
+  font-style: normal;
 }
