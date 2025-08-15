@@ -78,7 +78,7 @@ body {
   align-items: center;          /* center horizontally */
   text-align: center;           /* center text */
   padding: 0 20px;
-  min-height: 40vh;
+  min-height: 60vh;
   margin-top: 0;
 
   background-image: url('../img/bg1.png');
@@ -176,7 +176,7 @@ body {
 .featured__card {
   position: relative;
   width: 100%;
-  height: clamp(260px, 40vw, 520px); /* min, responsive, max */
+  height: clamp(260px, 50vw, 520px); /* min, responsive, max */
   overflow: hidden;
   background: #000;
 }
@@ -251,7 +251,7 @@ body {
 .about {
   position: relative;
   width: 100%;
-  min-height: 50vh;
+  min-height: 60vh;
   display: flex;
   align-items: center;
   padding: 60px 20px;
@@ -296,7 +296,7 @@ body {
 .team {
   position: relative;
   width: 100%;
-  min-height: 30vh;
+  min-height: 40vh;
   padding: 30px 20px 40px;
   background: url('../img/bg3.png') center/cover no-repeat; /* full stretch background */
   color: var(--fg);
