@@ -303,10 +303,10 @@ body {
 }
 
 .team h2 {
-  font-size: clamp(32px, 5vw, 56px);
+  font-size: clamp(10vh, 5vw, 56px);
   font-weight: 600;
   letter-spacing: .02em;
-  margin: 0 0 20vh;
+  margin: 0 0 10vh;
   text-align: center;
   font-family: 'FiraGo-Heavy', firago; /* use your preferred font */
 
@@ -350,7 +350,7 @@ body {
   .team__avatar{ max-width:140px; max-height:140px; }
 }
 .team__card h3{
-  letter-spacing:.04em;     /* adjust to taste (.02–.06em) */
+  letter-spacing:.1em;     /* adjust to taste (.02–.06em) */
   font-kerning: normal;
   text-rendering: optimizeLegibility;
 }
