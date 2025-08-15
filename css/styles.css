@@ -333,25 +333,25 @@ body {
 /* 1) Remove circles + scale images down */
 .avatar-wrap{
   width:auto; height:auto;
-  border-radius:0;
-  overflow:visible;
-  background:none;
+  border-radius:0; overflow:visible; background:none;
   margin:0 auto 16px;
 }
 
 .team__avatar{
-  width:190px;          /* clamp size */
-  height:auto;          /* keep aspect */
-  max-width:100%;
-  border-radius:0;      /* no circle */
-  object-fit:contain;   /* safe if height ever fixed */
+  width:auto;                /* use intrinsic aspect */
+  height:auto;
+  max-width:160px;           /* cap width */
+  max-height:160px;          /* cap height (retina-huge images) */
+  object-fit:contain;
+  border-radius:0;
+  display:block;
 }
+
 
 /* Optional: smaller on phones */
 @media (max-width:900px){
-  .team__avatar{ width:160px; }
+  .team__avatar{ max-width:140px; max-height:140px; }
 }
-
 .team__card h3{
   letter-spacing:.04em;     /* adjust to taste (.02–.06em) */
   font-kerning: normal;
