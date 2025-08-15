@@ -307,7 +307,7 @@ body {
   letter-spacing: .02em;
   margin: 0 0 36px;
   text-align: center;
-  font-family: 'FiraGo-Heavy', sans-serif; /* use your preferred font */
+  font-family: 'FiraGo-Heavy', firago; /* use your preferred font */
 
 }
 
@@ -328,18 +328,21 @@ body {
   z-index: 1; /* sits above background */
 }
 
-.team__avatar {
-  width: 190px;
-  height: 190px;
-  border-radius: 50%;
-  object-fit: contain;
-  object-position: center;
-  display: block;
-  margin: 0 auto 16px;
-  transform: scale(0.75); /* NEW: scales the image down */
-
+.avatar-wrap{
+  width:190px; height:190px;
+  border-radius:50%;
+  overflow:hidden;             /* circle mask */
+  display:inline-flex;         /* center content */
+  align-items:center; justify-content:center;
+  background:#000;             /* optional bg */
+  margin:0 auto 16px;
 }
 
+.team__avatar{
+  width:86%; height:86%;       /* scales down inside circle */
+  object-fit:contain;
+  display:block;
+}
 .team__card h3 {
   margin: 0 0 6px;
   font-size: 18px;
