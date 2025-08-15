@@ -218,6 +218,7 @@ body {
   font-size: clamp(28px, 5vw, 56px);
   font-weight: 600;
   letter-spacing: 0.02em;
+  font-family: Barbu, sans-serif;
 }
 
 .featured__desc {
@@ -326,6 +327,8 @@ body {
   text-align: center;
   position: relative;
   z-index: 1; /* sits above background */
+  font-family: 'Barbu', sans-serif; /* use your preferred font */
+
 }
 
 .avatar-wrap{
@@ -346,8 +349,6 @@ body {
 .team__card h3 {
   margin: 0 0 6px;
   font-size: 18px;
-  font-family: 'Barbu', sans-serif; /* use your preferred font */
-
 }
 
 .team__card p {
@@ -389,21 +390,21 @@ body {
 }
 @font-face {
   font-family: 'Barbu';
-  src: url('../fonts/BARBERCHOP.OTF') format('otf');  
+  src: url('../fonts/BARBERCHOP.OTF') format('opentype');  
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'FiraGo-Book';
-  src: url('../fonts/FiraGO-Book.otf') format('otf');
+  src: url('../fonts/FiraGO-Book.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'FiraGo-Heavy';
-  src: url('../fonts/FiraGO-Heavy.otf') format('otf');
+  src: url('../fonts/FiraGO-Heavy.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
 }
