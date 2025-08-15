@@ -330,24 +330,32 @@ body {
   font-family: 'Barbu', sans-serif; /* use your preferred font */
 
 }
-
+/* 1) Remove circles + scale images down */
 .avatar-wrap{
-  width:190px; height:190px;
-  overflow:hidden;             /* circle mask */
-  display:inline-flex;         /* center content */
-  align-items:center; justify-content:center;
-  background:#000;             /* optional bg */
+  width:auto; height:auto;
+  border-radius:0;
+  overflow:visible;
+  background:none;
   margin:0 auto 16px;
 }
 
 .team__avatar{
-  width:86%; height:86%;       /* scales down inside circle */
-  object-fit:contain;
-  display:block;
+  width:190px;          /* clamp size */
+  height:auto;          /* keep aspect */
+  max-width:100%;
+  border-radius:0;      /* no circle */
+  object-fit:contain;   /* safe if height ever fixed */
 }
-.team__card h3 {
-  margin: 0 0 6px;
-  font-size: 18px;
+
+/* Optional: smaller on phones */
+@media (max-width:900px){
+  .team__avatar{ width:160px; }
+}
+
+.team__card h3{
+  letter-spacing:.04em;     /* adjust to taste (.02–.06em) */
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
 }
 
 .team__card p {
