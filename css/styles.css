@@ -450,32 +450,33 @@ body {
 .game__framewrap {
   --game-h: 60vh;
 
-  width: 100vw;                          /* span full viewport width */
-  margin-left: calc(50% - 50vw);         /* break out of centered layout */
+  position: relative;
+  width: 100vw;                   /* span full viewport width */
+  margin-left: calc(50% - 50vw);  /* escape any parent max-width constraints */
   height: var(--game-h);
 
-  display: flex;                         /* center iframe */
-  align-items: center;
-  justify-content: center;
-
-  background: #000;                      /* letterbox background */
-  overflow: hidden;                      /* hide any overflow */
+  background: #000;
+  overflow: hidden;
 }
 
-/* make iframe fill the framewrap without its own scrollbars */
+/* iframe itself */
 .game__iframe {
-  width: 100%;
-  height: 100%;
-  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;       /* fill wrapper horizontally */
+  height: 100%;      /* fill wrapper vertically */
   border: 0;
-  overflow: hidden;                      /* helps in some browsers */
+  display: block;
   background: #000;
 }
 
-/* optional: taller on small screens */
+/* responsive tweak */
 @media (max-width: 900px) {
   .game__framewrap { --game-h: 70vh; }
 }
 
-/* optional: full-height variant (use .game__framewrap.full) */
-.game__framewrap.full { --game-h: calc(100vh - var(--nav-h)); }
+/* optional full-height variant */
+.game__framewrap.full {
+  --game-h: calc(100vh - var(--nav-h));
+}
