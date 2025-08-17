@@ -28,8 +28,13 @@
 
   <!-- PLAY block -->
   <div class="game__framewrap">
-    <iframe id="gameFrame" class="game__iframe" src="/webgl/chompocalypse/index.html" allowfullscreen></iframe>
+    <button id="btnFullscreen" class="btn btn--primary game__fs">Fullscreen</button>
+    <iframe id="gameFrame" class="game__iframe"
+            src="/webgl/chompocalypse/index.html"
+            allow="fullscreen"
+            allowfullscreen></iframe>
   </div>
+
 </main>
 
 
@@ -94,6 +99,42 @@
   } else {
     scaleIframe();
   }
+</script>
+
+<script>
+  // Fullscreen toggle for the iframe
+  (function(){
+    const btn = document.getElementById('btnFullscreen');
+    const iframe = document.getElementById('gameFrame');
+
+    function isFullscreen(){
+      return document.fullscreenElement || document.webkitFullscreenElement;
+    }
+
+    async function enterFS(el){
+      if (el.requestFullscreen) return el.requestFullscreen();
+      if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen(); // Safari/iOS
+    }
+
+    async function exitFS(){
+      if (document.exitFullscreen) return document.exitFullscreen();
+      if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+    }
+
+    btn.addEventListener('click', async () => {
+      try {
+        if (isFullscreen()) {
+          await exitFS();
+          btn.textContent = 'Fullscreen';
+        } else {
+          await enterFS(iframe);
+          btn.textContent = 'Exit Fullscreen';
+        }
+      } catch(e){
+        console.warn('Fullscreen failed:', e);
+      }
+    });
+  })();
 </script>
 
 </body>

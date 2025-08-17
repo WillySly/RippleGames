@@ -448,9 +448,9 @@ body {
 
 
 .game__framewrap {
-  --game-h: 60vh;
+  --game-h: 80vh;
 
-  position: relative;
+  position: relative;  
   width: 100vw;                   /* span full viewport width */
   margin-left: calc(50% - 50vw);  /* escape any parent max-width constraints */
   height: var(--game-h);
