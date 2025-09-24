@@ -103,39 +103,38 @@
 
 <script>
   // Fullscreen toggle for the iframe
-  // (function(){
-  //   const btn = document.getElementById('btnFullscreen');
-  //   const iframe = document.getElementById('gameFrame');
-  //
-  //   function isFullscreen(){
-  //     return document.fullscreenElement || document.webkitFullscreenElement;
-  //   }
-  //
-  //   async function enterFS(el){
-  //     if (el.requestFullscreen) return el.requestFullscreen();
-  //     if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen(); // Safari/iOS
-  //   }
-  //
-  //   async function exitFS(){
-  //     if (document.exitFullscreen) return document.exitFullscreen();
-  //     if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
-  //   }
-  //
-  //   btn.addEventListener('click', async () => {
-  //     try {
-  //       if (isFullscreen()) {
-  //         await exitFS();
-  //         btn.textContent = 'Fullscreen';
-  //       } else {
-  //         await enterFS(iframe);
-  //         btn.textContent = 'Exit Fullscreen';
-  //       }
-  //     } catch(e){
-  //       console.warn('Fullscreen failed:', e);
-  //     }
-  //   });
-  // })();
-  
+  (function(){
+    const btn = document.getElementById('btnFullscreen');
+    const iframe = document.getElementById('gameFrame');
+
+    function isFullscreen(){
+      return document.fullscreenElement || document.webkitFullscreenElement;
+    }
+
+    async function enterFS(el){
+      if (el.requestFullscreen) return el.requestFullscreen();
+      if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen(); // Safari/iOS
+    }
+
+    async function exitFS(){
+      if (document.exitFullscreen) return document.exitFullscreen();
+      if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+    }
+
+    btn.addEventListener('click', async () => {
+      try {
+        if (isFullscreen()) {
+          await exitFS();
+          btn.textContent = 'Fullscreen';
+        } else {
+          await enterFS(iframe);
+          btn.textContent = 'Exit Fullscreen';
+        }
+      } catch(e){
+        console.warn('Fullscreen failed:', e);
+      }
+    });
+  })();
 </script>
 
 </body>
