@@ -1,5 +1,6 @@
 <linker>
   <assembly fullname="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="AreaEffect" preserve="all" />
     <type fullname="BigTrashSpawner" preserve="all" />
     <type fullname="DiagonalSorting" preserve="all" />
     <type fullname="Draggable" preserve="all" />
@@ -9,12 +10,14 @@
     <type fullname="DynamicDepthSorter" preserve="all" />
     <type fullname="EnvManager" preserve="all" />
     <type fullname="GarbageBin" preserve="all" />
+    <type fullname="HighlightAllOnHover" preserve="all" />
     <type fullname="HighlightOnHover" preserve="all" />
     <type fullname="I2.Loc.Localize" preserve="all" />
     <type fullname="LevelData" preserve="all" />
     <type fullname="LevelFacade" preserve="all" />
     <type fullname="LevelInstaller" preserve="all" />
     <type fullname="LevelStateMachine" preserve="all" />
+    <type fullname="MaterialOutlineHighlight" preserve="all" />
     <type fullname="MonsterAI" preserve="all" />
     <type fullname="MonsterAnimator" preserve="all" />
     <type fullname="MonsterEatingBehaviour" preserve="all" />
@@ -26,6 +29,7 @@
     <type fullname="Poster" preserve="all" />
     <type fullname="RepairShop" preserve="all" />
     <type fullname="RestartManager" preserve="all" />
+    <type fullname="SpriteHighlight" preserve="all" />
     <type fullname="StreakManager" preserve="all" />
     <type fullname="TintHighlight" preserve="all" />
     <type fullname="Tooltip" preserve="all" />
@@ -35,6 +39,7 @@
     <type fullname="TrashSpawner" preserve="all" />
     <type fullname="TrashZone" preserve="all" />
     <type fullname="TutorialStateMachine" preserve="all" />
+    <type fullname="UpdateColliderShape" preserve="all" />
     <type fullname="Waste" preserve="all" />
     <type fullname="I2.Loc.EventCallback" preserve="nothing" serialized="true" />
     <type fullname="I2.Loc.LocalizedString" preserve="nothing" serialized="true" />
