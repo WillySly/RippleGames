@@ -103,20 +103,20 @@
 
 <script>
   // Fullscreen toggle for the iframe
-  (function(){
+  (function () {
     const btn = document.getElementById('btnFullscreen');
     const iframe = document.getElementById('gameFrame');
 
-    function isFullscreen(){
+    function isFullscreen() {
       return document.fullscreenElement || document.webkitFullscreenElement;
     }
 
-    async function enterFS(el){
+    async function enterFS(el) {
       if (el.requestFullscreen) return el.requestFullscreen();
       if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen(); // Safari/iOS
     }
 
-    async function exitFS(){
+    async function exitFS() {
       if (document.exitFullscreen) return document.exitFullscreen();
       if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
     }
@@ -130,11 +130,94 @@
           await enterFS(iframe);
           btn.textContent = 'Exit Fullscreen';
         }
-      } catch(e){
+      } catch (e) {
         console.warn('Fullscreen failed:', e);
       }
     });
   })();
+
+  <script>
+    // Patch Unity canvas sizing inside the iframe (same-origin required)
+    (function () {
+    const IFRAMe_ID = 'gameFrame';         // your iframe id
+    const DPR_CAP = 1.5;                   // tame HiDPI weirdness on Chrome
+
+    function patchUnityResizer(iframe) {
+    if (!iframe || !iframe.contentWindow) return;
+
+    const w = iframe.contentWindow;
+
+    function tryPatch() {
+    const d = w.document;
+    const canvas = d && d.getElementById('unity-canvas');
+    if (!canvas) return false;
+
+    // Try to find Unity's Module to call setCanvasSize (best); fall back to just resizing canvas
+    const Module = (w.unityInstance && w.unityInstance.Module) || w.Module || null;
+
+    function syncCanvasBackingStore() {
+    // Use current CSS box as truth
+    const cssW = canvas.clientWidth;
+    const cssH = canvas.clientHeight;
+    const dpr  = Math.min(w.devicePixelRatio || 1, DPR_CAP);
+    const bufW = Math.round(cssW * dpr);
+    const bufH = Math.round(cssH * dpr);
+
+    if (canvas.width !== bufW || canvas.height !== bufH) {
+    canvas.width  = bufW;
+    canvas.height = bufH;
+    if (Module && typeof Module.setCanvasSize === 'function') {
+    Module.setCanvasSize(bufW, bufH);
+  }
+  }
+  }
+
+    // Hook their existing onResize (keep original behavior, then fix backing store)
+    const originalOnResize = typeof w.onResize === 'function' ? w.onResize : null;
+    w.onResize = function () {
+    if (originalOnResize) originalOnResize();
+    syncCanvasBackingStore();
+  };
+
+    // Run now and on relevant events inside iframe
+    syncCanvasBackingStore();
+    w.addEventListener('resize', syncCanvasBackingStore);
+    w.addEventListener('orientationchange', syncCanvasBackingStore);
+
+    // When the parent toggles fullscreen on the iframe, re-sync after layout settles
+    document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement === iframe) {
+    setTimeout(() => {
+    try {
+    if (typeof w.onResize === 'function') w.onResize();
+    else syncCanvasBackingStore();
+  } catch (_) {}
+  }, 60);
+  }
+  });
+
+    return true;
+  }
+
+    // Retry until Unity page is ready
+    const timer = setInterval(() => {
+    try {
+    if (tryPatch()) clearInterval(timer);
+  } catch (_) {}
+  }, 150);
+
+    // Also patch on iframe reloads
+    iframe.addEventListener('load', () => {
+    try {tryPatch();} catch (_) {}
+  });
+  }
+
+    window.addEventListener('DOMContentLoaded', () => {
+    const iframe = document.getElementById(IFRAMe_ID);
+    patchUnityResizer(iframe);
+  });
+  })();
+</script>
 </script>
 
 </body>
