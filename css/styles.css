@@ -397,7 +397,6 @@ body {
   }
 }
 
-
 .contact {
   max-width: 1100px;
   margin: 0 auto;
@@ -447,17 +446,23 @@ body {
 }
 
 
+/* default (fallback for older browsers, will be overridden by @supports) */
 .game__framewrap {
-  --game-h: 80vh;
-
-  position: relative;  
-  width: 100vw;                   /* span full viewport width */
-  margin-left: calc(50% - 50vw);  /* escape any parent max-width constraints */
-  height: var(--game-h);
-
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  height: calc(var(--game-h, 1vh) * 100 - var(--nav-h)); /* fallback */
   background: #000;
   overflow: hidden;
 }
+
+/* modern browsers: use dvh so it tracks URL bar/show-hide, resize, etc. */
+@supports (height: 100dvh) {
+  .game__framewrap {
+    height: calc(100dvh - var(--nav-h));
+  }
+}
+
 
 /* iframe itself */
 .game__iframe {
