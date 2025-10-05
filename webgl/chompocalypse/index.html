@@ -44,7 +44,7 @@
 
 <body>
 	<div id="gameContainer">
-		<canvas id="unity-canvas" width="1920" height="1080" data-pixel-art=""></canvas>
+		<canvas id="unity-canvas" width="960" height="540" data-pixel-art=""></canvas>
 		<script src="Build/chompocalypse.loader.js"></script>
 		<script>
 			var canvas = document.querySelector("#unity-canvas");
@@ -79,15 +79,15 @@
 					w = window.innerWidth;
 					h = window.innerHeight;
 
-					var r = 1080 / 1920;
+					var r = 540 / 960;
 
 					if (w * r > window.innerHeight) {
 						w = Math.min(w, Math.ceil(h / r));
 					}
 					h = Math.floor(w * r);
 				} else {
-					w = 1920;
-					h = 1080;
+					w = 960;
+					h = 540;
 				}
 
 				container.style.width = canvas.style.width = w + "px";
