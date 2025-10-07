@@ -447,28 +447,29 @@ body {
 }
 
 
-.game__framewrap {
-  --game-h: 80vh;
+.game__framewrap{
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background:#000;
+  overflow:hidden;
 
-  position: relative;  
-  width: 100vw;                   /* span full viewport width */
-  margin-left: calc(50% - 50vw);  /* escape any parent max-width constraints */
-  height: var(--game-h);
-
-  background: #000;
-  overflow: hidden;
+  /* default (old browsers) uses our JS fallback var --vh */
+  height: calc(var(--vh, 1vh) * 100 - var(--nav-h));
 }
 
-/* iframe itself */
-.game__iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;       /* fill wrapper horizontally */
-  height: 100%;      /* fill wrapper vertically */
-  border: 0;
-  display: block;
-  background: #000;
+/* modern browsers: use dynamic viewport unit so URL bar changes are handled */
+@supports (height: 100dvh){
+  .game__framewrap{
+    height: calc(100dvh - var(--nav-h));
+  }
+}
+
+/* iframe fills wrapper */
+.game__iframe{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  border:0; display:block; background:#000;
 }
 
 /* responsive tweak */
