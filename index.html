@@ -8,6 +8,11 @@
   <link rel="icon" href="img/maria.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="img/maria.png" sizes="180x180">
   <link rel="shortcut icon" href="img/maria.png">
+  <link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
 </head>
 <body>
 
@@ -70,6 +75,37 @@
       </div>
     </div>
   </section>
+
+  <section class="games-showcase">
+    <div class="divider-title">
+      <h2>MORE GAMES</h2>
+    </div>
+    
+
+      <div class="swiper">
+  <div class="swiper-wrapper">
+    <!-- Slides -->
+    <div class="swiper-slide">Slide 1</div>
+    <div class="swiper-slide">Slide 2</div>
+    <div class="swiper-slide">Slide 3</div>
+    <div class="swiper-slide">Slide 3</div>
+    <div class="swiper-slide">Slide 3</div>
+    <div class="swiper-slide">Slide 3</div>
+    <div class="swiper-slide">Slide 3</div>
+    </div>
+      <div class="swiper-pagination"></div>
+    </div>
+    
+    <!-- <div class="carousel-controls">
+      <a href="/gallery" class="cta-button">
+        View full gallery
+      </a>
+    </div> -->
+    <div class="divider">
+      <button>View full gallery</button>
+    </div>
+
+  </section>
   
   
   <!-- About -->
@@ -85,7 +121,10 @@
 
   <!-- Team -->
   <section class="team">
-    <h2>MEET THE TEAM</h2>
+    <div class="divider-title">
+      <h2>MEET THE TEAM</h2>
+    </div>
+    
     <ul class="team__grid">
       <li class="team__card">
        <span class="avatar-wrap">
@@ -107,10 +146,37 @@
 
   <!-- Contact -->
   <section id="contact" class="contact">
-    <h2>CONTACT US</h2>
-    <a href="" target="_blank" rel="noopener">
+    <h2>CONTACT US:</h2>
+    <a href="https://www.linkedin.com/company/ripplegames/" target="_blank" rel="noopener">
       <img src="img/linkedin.png" alt="LinkedIn" style="width:36px; height:36px;">
     </a>
+    <span class="email-text">ripplegamesltd@gmail.com</span>
   </section>
 </main>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const swiper = new Swiper(".swiper", {
+      // Swiper options
+      loop: true,
+      slidesPerView: 3,
+      spaceBetween: 20,
+
+      pagination: {
+        el: ".swiper-pagination",
+        dynamicBullets: true,
+        clickable: true
+      },
+
+      // Responsive breakpoints
+      breakpoints: {
+        768: {
+          slidesPerView: 4,
+        },
+        480: {
+          slidesPerView: 2,
+        },
+      },
+    });
+  });
+</script>
