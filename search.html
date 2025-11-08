@@ -36,12 +36,14 @@
       </nav>
 
       <div class="navbar-actions">
-      <div class="search-box">
-        <input type="text" placeholder="Search" class="search-input">
-        <button class="search-icon">
-            &#x1F50D;
-        </button>
-      </div>
+        <form action="file:///C:/Users/georg/VSProjects/RippleGames/search.html" method="GET" class="search-form" >
+        <div class="search-box">
+            <input type="text" placeholder="Search" class="search-input" name="q">
+            <button class="search-icon">
+                &#x1F50D;
+            </button>
+        </div>
+      </form>
       <!-- <div class="lang-switcher">
           <span class="lang-option active">EN</span>
           <span class="lang-divider">|</span>
@@ -57,7 +59,7 @@
 <main class="search-results-page">
     <section class="search-header">
         <h1 class="search-title">SEARCH RESULT FOR</h1>
-        <span class="search-term-tag">#randomtag</span>
+        <span class="search-term-tag" id="searchQueryDisplay">#searchtag</span>
     </section>
     
     <!-- <section class="game-card-grid">
@@ -114,5 +116,33 @@
             toggleButton.classList.remove('is-active');
         });
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // 1. Get the URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // 2. Read the value of the 'q' parameter (the search query)
+    let query = urlParams.get('q');
+    
+    // 3. Get the element where the query will be displayed
+    const displayElement = document.getElementById('searchQueryDisplay');
+
+    if (query && displayElement) {
+        // Decode URI component (e.g., handles spaces and special characters)
+        query = decodeURIComponent(query.trim());
+        
+        // Ensure the query is not empty after trimming
+        if (query !== "") {
+            // Prepend a '#' and display the text
+            displayElement.textContent = '#' + query.toLowerCase().replace(/ /g, '');
+        } else {
+            // Handle case where query is empty (optional)
+            displayElement.textContent = '#';
+        }
+    } else if (displayElement) {
+        // Handle case where no query parameter exists (e.g., direct page load)
+        displayElement.textContent = '#';
+    }
+});
   });
 </script>
