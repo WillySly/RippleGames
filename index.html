@@ -21,15 +21,21 @@
     <div class="navbar-logo">
       <img src="img/logo.png" alt="Ripple Games logo" class="logo" />
     </div>
-    
-    <nav class="navbar-links">
-      <a class="navbar-link" href="#featured">Our Games</a>
-      <a class="navbar-link" href="#about">About Us</a>
-      <a class="navbar-link" href="#clients">Our Clients</a>
-      <a class="navbar-link" href="#contact">Contact</a>
-    </nav>
 
-    <div class="navbar-actions">
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+    <div class="navbar-collapsible" id="navbar-collapsible">
+      <nav class="navbar-links">
+        <a class="navbar-link" href="#featured">Our Games</a>
+        <a class="navbar-link" href="#about">About Us</a>
+        <a class="navbar-link" href="#clients">Our Clients</a>
+        <a class="navbar-link" href="#contact">Contact</a>
+      </nav>
+
+      <div class="navbar-actions">
       <div class="search-box">
         <input type="text" placeholder="Search" class="search-input">
         <button class="search-icon">
@@ -42,6 +48,9 @@
           <span class="lang-option inactive">GE</span>
       </div> -->
   </div>
+    </div>
+
+    
   </div>
 </nav>
 
@@ -227,6 +236,30 @@
           slidesPerView: 1,
         },
       },
+    });
+
+    const toggleButton = document.getElementById('menu-toggle');
+    const collapsibleMenu = document.getElementById('navbar-collapsible');
+
+    toggleButton.addEventListener('click', function() {
+        // Toggle the 'open' class on the collapsible wrapper
+        collapsibleMenu.classList.toggle('open');
+        
+        // Update ARIA attribute for accessibility
+        const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true' || false;
+        toggleButton.setAttribute('aria-expanded', !isExpanded);
+        
+        // Optional: Animate the hamburger icon (if you add the CSS for it)
+        toggleButton.classList.toggle('is-active'); 
+    });
+
+    // Optional: Close menu when a link is clicked (useful for anchor links)
+    collapsibleMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', function() {
+            collapsibleMenu.classList.remove('open');
+            toggleButton.setAttribute('aria-expanded', 'false');
+            toggleButton.classList.remove('is-active');
+        });
     });
   });
 </script>

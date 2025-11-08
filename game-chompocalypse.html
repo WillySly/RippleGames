@@ -10,19 +10,43 @@
   <link rel="shortcut icon" href="img/maria.png">
 </head>
 <body class="page--game">
-<header class="nav">
-  <div class="nav__inner">
-    <div class="nav__left">
-      <img src="/img/logo.png" alt="Ripple Games logo" class="logo" />
+<nav class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-logo">
+      <img src="img/logo.png" alt="Ripple Games logo" class="logo" />
     </div>
-    
-    <nav class="nav__right">
-      <a class="nav__link" href="/index.html#featured">Our Games</a>
-      <a class="nav__link" href="/index.html#about">About Us</a>
-      <a class="nav__link" href="/index.html#contact">Contact</a>
-    </nav>
+
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+    <div class="navbar-collapsible" id="navbar-collapsible">
+      <nav class="navbar-links">
+        <a class="navbar-link" href="#featured">Our Games</a>
+        <a class="navbar-link" href="#about">About Us</a>
+        <a class="navbar-link" href="#clients">Our Clients</a>
+        <a class="navbar-link" href="#contact">Contact</a>
+      </nav>
+
+      <div class="navbar-actions">
+      <div class="search-box">
+        <input type="text" placeholder="Search" class="search-input">
+        <button class="search-icon">
+            &#x1F50D;
+        </button>
+      </div>
+      <!-- <div class="lang-switcher">
+          <span class="lang-option active">EN</span>
+          <span class="lang-divider">|</span>
+          <span class="lang-option inactive">GE</span>
+      </div> -->
   </div>
-</header>
+    </div>
+
+    
+  </div>
+</nav>
 
 <main class="game">
 

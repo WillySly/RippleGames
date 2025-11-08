@@ -52,7 +52,7 @@ body {
   display: flex;
   justify-content: space-between;
   
-  /* align-items: center; */
+  align-items: center;
 }
 
 .navbar-logo {
@@ -65,9 +65,8 @@ body {
   display: flex;
   gap: 5vw;
   align-items: center;
-  margin-left: auto;
-    margin-right: auto;
-
+  margin-left: auto; 
+  margin-right: auto;
 }
 
 .navbar-link {
@@ -148,6 +147,115 @@ body {
 
 .nav__lang {
   opacity: .7;
+}
+
+.navbar-collapsible {
+    display: flex; /* Make it a flex container on desktop */
+    align-items: center;
+    width: 100%; 
+    justify-content: space-between; /* Centers the *group* of links and actions */
+}
+
+.menu-toggle {
+    display: none; /* Hidden by default on desktop */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001; /* Ensure it's above the collapsible menu */
+}
+
+.menu-toggle .bar {
+    display: block;
+    width: 25px;
+    height: 3px;
+    margin: 5px 0;
+    background-color: white;
+    transition: all 0.3s ease-in-out;
+}
+
+/* --- Mobile Breakpoint --- */
+@media (max-width: 900px) {
+    /* Modify main container behavior */
+    .navbar-container {
+        /* Align items to the top since the menu will drop below the logo */
+        align-items: flex-start;
+        /* Ensure logo and toggle button are spaced out */
+        padding: 0; /* Remove internal padding on mobile */
+        /* IMPORTANT: Allow content to wrap */
+        flex-wrap: wrap; 
+    }
+    
+    /* Display the toggle button */
+    .menu-toggle {
+        display: block;
+        order: 2; /* Place toggle button next to logo */
+        margin-left: auto; /* Push it to the right */
+        margin-right: 30px; /* Match container padding */
+        
+    }
+
+    /* Collapse the links and actions into a single column */
+    .navbar-collapsible {
+        /* Hidden by default */
+        display: none; 
+        
+        /* Full width for the dropdown menu */
+        width: 100%; 
+        order: 3; /* Ensure it appears below the logo/toggle row */
+        
+        /* Positioning the menu dropdown */
+        position: absolute;
+        top: 75px; /* Adjust based on your header's height */
+        left: 0;
+        
+        /* Style the dropdown background */
+        background-color: #000;
+        border: 1px solid #ffffff;
+        border-top: none;
+        border-radius: 0 0 15px 15px;
+        padding: 10px 0;
+    }
+
+    /* Display the menu when the 'open' class is toggled by JS */
+    .navbar-collapsible.open {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Style for links inside the dropdown */
+    .navbar-links {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        margin: 0;
+        padding: 10px 0;
+    }
+
+    .navbar-link {
+        padding: 10px 0;
+        width: 100%;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Style for actions inside the dropdown */
+    .navbar-actions {
+        padding: 15px 0 10px 0;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* Shrink the search box on mobile */
+    .search-box {
+        width: 80%;
+        justify-content: space-between;
+    }
+
+    .search-input {
+        width: 100%;
+    }
 }
 
 .hero-section {
@@ -648,6 +756,8 @@ body {
     font-size: 1.2em; 
     font-weight: 400;
     font-family: 'FiraGo-Book', sans-serif;
+    font-size: clamp(0.9em, 4vw, 1.2em);
+    word-break: break-all;
 }
 @font-face {
   font-family: 'Barbu';
