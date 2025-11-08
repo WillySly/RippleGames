@@ -11,28 +11,48 @@
 </head>
 <body>
 
-<header class="nav">
-  <div class="nav__inner">
-    <div class="nav__left">
-      <img src="/img/logo.png" alt="Ripple Games logo" class="logo" />
+<nav class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-logo">
+      <img src="img/logo.png" alt="Ripple Games logo" class="logo" />
     </div>
     
-    <nav class="nav__right">
-      <a class="nav__link" href="#featured">Our Games</a>
-      <a class="nav__link" href="#about">About Us</a>
-      <a class="nav__link" href="#contact">Contact</a>
+    <nav class="navbar-links">
+      <a class="navbar-link" href="#featured">Our Games</a>
+      <a class="navbar-link" href="#about">About Us</a>
+      <a class="navbar-link" href="#clients">Our Clients</a>
+      <a class="navbar-link" href="#contact">Contact</a>
     </nav>
+
+    <div class="navbar-actions">
+      <div class="search-box">
+        <input type="text" placeholder="Search" class="search-input">
+        <button class="search-icon">
+            &#x1F50D;
+        </button>
+      </div>
+      <div class="lang-switcher">
+          <span class="lang-option active">EN</span>
+          <span class="lang-divider">|</span>
+          <span class="lang-option inactive">GE</span>
+      </div>
   </div>
-</header>
+  </div>
+</nav>
 
 <main>
   <!-- Hero / intro -->
-  <section class="hero">
-    <div class="hero__branding">
-      <span class="hero__brandname">Ripple Games</span>
-      <p class="hero__small">Turning fleeting creations into lasting change,
-        we give socially conscious games a home where their stories, ideas, and impact can keep growing long after they’re made.</p>
-      <img src="/img/BigLogo.png" alt="Ripple Games logo" class="hero__biglogo" />
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">RIPPLE GAMES</h1>
+      <p class="hero-description">
+        Turning fleeting creations into lasting change, we give socially conscious games a home where their stories, ideas, and impact can keep growing long after they’re made.
+      </p>
+      
+      <div class="hero-graphic">
+        <img src="img/BigLogo.png" alt="A stylized orange creature partially submerged in water, creating ripples." class="hero-illustration" />
+      </div>
+      
     </div>
   </section>
 
@@ -40,7 +60,7 @@
   <!-- Featured game -->
   <section id="featured" class="featured">
     <div class="featured__card">
-      <img src="/img/chompocalipse.png" alt="Chompocalipse" class="featured__image" />
+      <img src="img/chompocalipse.png" alt="Chompocalipse" class="featured__image" />
       <div class="featured__overlay"></div>
 
       <div class="featured__content">
@@ -77,7 +97,7 @@
 
       <li class="team__card">
         <span class="avatar-wrap">
-         <img src="/img/zizi.png" alt="Zizi Nishnianidze" class="team__avatar">
+         <img src="img/zizi.png" alt="Zizi Nishnianidze" class="team__avatar">
         </span>
         <h3>ZIZI NISHNIANIDZE</h3>
         <p>Co-founder | Amateur Oracle</p>
