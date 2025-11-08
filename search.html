@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ripple Games</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="img/maria.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="img/maria.png" sizes="180x180">
+  <link rel="shortcut icon" href="img/maria.png">
+  <link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-logo">
+      <img src="img/logo.png" alt="Ripple Games logo" class="logo" />
+    </div>
+
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+    <div class="navbar-collapsible" id="navbar-collapsible">
+      <nav class="navbar-links">
+        <a class="navbar-link" href="/#featured">Our Games</a>
+        <a class="navbar-link" href="/#about">About Us</a>
+        <a class="navbar-link" href="/#clients">Our Clients</a>
+        <a class="navbar-link" href="/#contact">Contact</a>
+      </nav>
+
+      <div class="navbar-actions">
+      <div class="search-box">
+        <input type="text" placeholder="Search" class="search-input">
+        <button class="search-icon">
+            &#x1F50D;
+        </button>
+      </div>
+      <!-- <div class="lang-switcher">
+          <span class="lang-option active">EN</span>
+          <span class="lang-divider">|</span>
+          <span class="lang-option inactive">GE</span>
+      </div> -->
+  </div>
+    </div>
+
+    
+  </div>
+</nav>
+
+<main class="search-results-page">
+    <section class="search-header">
+        <h1 class="search-title">SEARCH RESULT FOR</h1>
+        <span class="search-term-tag">#randomtag</span>
+    </section>
+    
+    <!-- <section class="game-card-grid">
+        
+        <div class="game-card">
+            <img src="img/stalin-approves.png" alt="#STALINAPPROVES" class="card-image" />
+            <div class="card-overlay">
+                <span class="card-tag">#STALINAPPROVES</span>
+            </div>
+        </div>
+        
+        <div class="game-card">
+            <img src="img/chompocalypse-thumb.png" alt="CHOMPOCALYPSE" class="card-image" />
+            <div class="card-content">
+                <h3 class="card-title">CHOMPOCALYPSE</h3>
+                <div class="card-tags">
+                    <span class="card-tag">#UNDP</span>
+                    <span class="card-tag">#E-Waste</span>
+                    <span class="card-tag">#Educational</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-card">...</div>
+        <div class="game-card">...</div>
+        
+    </section> -->
+</main>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+
+    const toggleButton = document.getElementById('menu-toggle');
+    const collapsibleMenu = document.getElementById('navbar-collapsible');
+
+    toggleButton.addEventListener('click', function() {
+        // Toggle the 'open' class on the collapsible wrapper
+        collapsibleMenu.classList.toggle('open');
+        
+        // Update ARIA attribute for accessibility
+        const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true' || false;
+        toggleButton.setAttribute('aria-expanded', !isExpanded);
+        
+        // Optional: Animate the hamburger icon (if you add the CSS for it)
+        toggleButton.classList.toggle('is-active'); 
+    });
+
+    // Optional: Close menu when a link is clicked (useful for anchor links)
+    collapsibleMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', function() {
+            collapsibleMenu.classList.remove('open');
+            toggleButton.setAttribute('aria-expanded', 'false');
+            toggleButton.classList.remove('is-active');
+        });
+    });
+  });
+</script>
