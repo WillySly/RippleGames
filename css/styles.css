@@ -273,28 +273,12 @@ body {
   width: 100%;
   height: clamp(260px, 50vw, 520px); /* min, responsive, max */
   overflow: hidden;
-  background: #000;
+  background-image: url('../img/chompocalipse.png');
+  background-size: cover; 
+  background-position: center; 
+  background-repeat: no-repeat;
 }
 
-.featured__image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;   /* fill frame without distortion */
-  object-position: center;
-}
-
-.featured__overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-          0deg,
-          rgba(0, 0, 0, 0.55) 20%,
-          rgba(0, 0, 0, 0.15) 60%,
-          rgba(0, 0, 0, 0.55) 100%
-  );
-}
 
 .featured__content {
   position: absolute;
@@ -305,6 +289,7 @@ body {
   align-items: flex-start;      /* left-align everything */
   text-align: left;
   color: var(--fg);
+  z-index: 15;
   padding-left: max(var(--gutter), calc((100vw - var(--content-max))/2 + var(--gutter)));
   padding-right: var(--gutter);/* NEW: equal spacing between all children */
 }
@@ -312,14 +297,49 @@ body {
 .featured__title {
   font-size: clamp(54px, 5vw, 72px);
   font-weight: 600;
+  /* ADDED: Subtle black text shadow/outline */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   letter-spacing: 0.1em;
+  z-index: 15;
   font-family: Barbu, sans-serif;
   margin: 0 0 30px 0;
 }
 
 .featured__desc {
   max-width: 720px;
+  /* ADDED: Subtle black text shadow/outline */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   margin: 0 0 10vh;
+}
+
+.featured__banner-logo {
+    /* Position it absolutely within the featured__card */
+    position: absolute;
+    top: 15%; 
+    left: 0;
+    z-index: 10; 
+
+    background: white;
+    
+    height: clamp(160px, 30vw, 300px); 
+    
+    padding: 10px 30px 10px 0; 
+    
+    border-top-right-radius: 40px; 
+    border-bottom-right-radius: 40px; 
+    
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); /* Stronger shadow, dropped down a bit */
+    
+    display: flex;
+    align-items: center;
+}
+
+/* The actual logo image inside the banner */
+.featured__logo-image {
+    height: 100%; 
+    width: auto;
+    object-fit: contain; 
+    padding-left: 25px; /* Adjust this value to set the spacing on the left */
 }
 
 .divider-title {
@@ -678,6 +698,10 @@ body {
 /* responsive tweak */
 @media (max-width: 900px) {
   .game__framewrap { --game-h: 70vh; }
+  .featured__banner-logo {
+        /* Hides the element and removes it from the document flow */
+        display: none; 
+    }
 }
 
 /* optional full-height variant */
