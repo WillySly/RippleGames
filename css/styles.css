@@ -172,6 +172,7 @@ body {
 }
 
 .hero-title {
+  padding-top: 50px;
   font-size: clamp(3rem, 7vw, 6rem);
   font-weight: 700;
   color: #F9CC61;
