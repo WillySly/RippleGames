@@ -388,24 +388,56 @@ body {
 
 .swiper {
   width: 100%;
-  height: 100%;
+  height: 300px;
 }
 
 .swiper-slide {
-  text-align: center;
-  font-size: 18px;
-  background: #444;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  border-radius: 30px; /* Adjust this value to control the curve */
+    position: relative;
 }
 
-.swiper-slide img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+
+.swiper-pagination {
+  position: relative; /* Or adjust 'bottom' if 'position: absolute;' is desired */
+    margin-top: 10px;
+  }
+
+/* Position the content block at the bottom left */
+.card-content {
+    position: absolute;
+    bottom: 0; /* Adjust this value to move it up slightly from the absolute bottom */
+    left: 0; /* Adjust this value to move it right slightly from the absolute left */
+    padding: 20px; /* Add some padding around the content */
+    width: 100%;
+    /* Add the gradient overlay if you want the smooth transition at the bottom */
+    /* background: linear-gradient(transparent, rgba(0, 0, 0, 0.5)); */
 }
+
+/* Style the main title */
+.card-title {
+    color: white;
+    font-size: clamp(1rem, 5vw, 3rem);
+    font-weight: 800;
+    margin: 0 0 10px 0;
+}
+
+/* Container for the tags */
+.card-tags {
+    display: flex; /* Makes the tags line up horizontally */
+    gap: 10px; /* Space between the tags */
+}
+
+/* Style for individual tags */
+.tag {
+    background-color: #262626; /* A dark or specific color for the tag background */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px; /* Slightly rounded corners */
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+
 /* Button */
 .btn {
   display: inline-block;
@@ -594,6 +626,7 @@ body {
 .email-text {
     font-size: 1.2em; 
     font-weight: 400;
+    font-family: 'FiraGo-Book', sans-serif;
 }
 @font-face {
   font-family: 'Barbu';
