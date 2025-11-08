@@ -117,8 +117,6 @@
         });
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
-    // 1. Get the URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     
     // 2. Read the value of the 'q' parameter (the search query)
@@ -143,6 +141,10 @@
         // Handle case where no query parameter exists (e.g., direct page load)
         displayElement.textContent = '#';
     }
-});
+
+    
   });
 </script>
+
+</body>
+</html>
