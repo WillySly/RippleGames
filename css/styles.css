@@ -399,8 +399,8 @@ body {
   text-align: left;
   color: var(--fg);
   z-index: 15;
-  padding-left: max(var(--gutter), calc((100vw - var(--content-max))/2 + var(--gutter)));
-  padding-right: var(--gutter);/* NEW: equal spacing between all children */
+  padding-left: max(30vw, calc((100vw - var(--content-max))/1.5 + var(--gutter)));
+  /* padding-right: var(--gutter); */
 }
 
 .featured__title {
@@ -759,6 +759,57 @@ body {
     font-size: clamp(0.9em, 4vw, 1.2em);
     word-break: break-all;
 }
+
+
+.search-results-page {
+    padding-top: 150px; /* Space below the fixed navbar */
+    min-height: 100vh;
+    background-color: black;
+    color: white;
+}
+
+.search-header {
+    display: flex;
+    align-items: center;
+    /* Use margins to center and constrain the section width */
+    padding: 20px var(--gutter);
+    position: relative; /* Essential for positioning the ::after pseudo-element */
+    padding-bottom: 25px; /* Increase padding to make room for the line */
+    margin-bottom: 30px;
+}
+
+.search-header::after {
+    content: ''; /* Required for pseudo-elements */
+    
+    /* Dimensions and Color */
+    padding-left: -30px;
+    flex: 1;
+    height: 4px; /* Thickness of the line */
+    background-color: #ffcc00; /* The yellow color used for the tag */
+    border-radius: 2px; /* Slight rounding for a smooth look */
+}
+
+.search-title {
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 600;
+    color: #fff; /* White text */
+    margin-right: 15px;
+    font-family: 'FiraGo-Book', FiraGo, sans-serif;
+}
+
+.search-term-tag {
+    /* The yellow bubble style */
+    background-color: #ffcc00; /* Example yellow color */
+    color: #000;
+    font-size: 1.1em;
+    font-weight: bold;
+    padding: 8px 15px;
+    border-radius: 25px; /* Fully rounded */
+    white-space: nowrap;
+    font-family: 'FiraGo-Book', FiraGo, sans-serif;
+}
+
+
 @font-face {
   font-family: 'Barbu';
   src: url('../fonts/BARBERCHOP.OTF') format('opentype');  
@@ -804,6 +855,7 @@ body {
   position:absolute; inset:0;
   width:100%; height:100%;
   border:0; display:block; background:#000;
+  padding-top: 150px
 }
 
 /* responsive tweak */
