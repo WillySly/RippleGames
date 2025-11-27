@@ -430,7 +430,7 @@ body {
 
     background: white;
     
-    height: clamp(160px, 30vw, 300px); 
+    height: 30%; 
     
     padding: 10px 30px 10px 0; 
     
@@ -861,10 +861,7 @@ body {
 /* responsive tweak */
 @media (max-width: 900px) {
   .game__framewrap { --game-h: 70vh; }
-  .featured__banner-logo {
-        /* Hides the element and removes it from the document flow */
-        display: none; 
-    }
+
 }
 
 /* optional full-height variant */
