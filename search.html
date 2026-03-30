@@ -129,16 +129,17 @@
       matches.forEach(game => {
         const card = document.createElement('div');
         card.className = 'game-card';
-        const inner = game.link
-          ? `<a href="${game.link}"><img src="${game.image}" alt="${game.title}" class="card-image" /></a>`
-          : `<img src="${game.image}" alt="${game.title}" class="card-image" />`;
+        card.style.backgroundImage = `url('${game.image}')`;
+        if (game.link) {
+          card.style.cursor = 'pointer';
+          card.addEventListener('click', () => window.location = game.link);
+        }
         const tagHtml = game.tags.map(t =>
-          `<a href="/search.html?q=${encodeURIComponent(t)}"><span class="card-tag">#${t.toUpperCase()}</span></a>`
+          `<a href="/search.html?q=${encodeURIComponent(t)}" onclick="event.stopPropagation()"><span class="tag">#${t.toUpperCase()}</span></a>`
         ).join('');
         card.innerHTML = `
-          ${inner}
           <div class="card-content">
-            <h3 class="card-title">${game.title}</h3>
+            <h2 class="card-title">${game.title}</h2>
             <div class="card-tags">${tagHtml}</div>
           </div>`;
         grid.appendChild(card);
