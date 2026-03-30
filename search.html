@@ -19,7 +19,7 @@
 <nav class="navbar">
   <div class="navbar-container">
     <div class="navbar-logo">
-      <img src="img/logo.png" alt="Ripple Games logo" class="logo" />
+      <a href="/"><img src="img/logo.png" alt="Ripple Games logo" class="logo" /></a>
     </div>
 
     <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,88 +61,89 @@
         <h1 class="search-title">SEARCH RESULT FOR</h1>
         <span class="search-term-tag" id="searchQueryDisplay">#searchtag</span>
     </section>
-    
-    <!-- <section class="game-card-grid">
-        
-        <div class="game-card">
-            <img src="img/stalin-approves.png" alt="#STALINAPPROVES" class="card-image" />
-            <div class="card-overlay">
-                <span class="card-tag">#STALINAPPROVES</span>
-            </div>
-        </div>
-        
-        <div class="game-card">
-            <img src="img/chompocalypse-thumb.png" alt="CHOMPOCALYPSE" class="card-image" />
-            <div class="card-content">
-                <h3 class="card-title">CHOMPOCALYPSE</h3>
-                <div class="card-tags">
-                    <span class="card-tag">#UNDP</span>
-                    <span class="card-tag">#E-Waste</span>
-                    <span class="card-tag">#Educational</span>
-                </div>
-            </div>
-        </div>
 
-        <div class="game-card">...</div>
-        <div class="game-card">...</div>
-        
-    </section> -->
+    <section class="game-card-grid" id="resultsGrid"></section>
+    <p class="search-no-results" id="noResults" style="display:none;">No games found.</p>
 </main>
 
 <script>
+  const GAMES = [
+    {
+      title: "CHOMPO-CALYPSE",
+      image: "img/game-cards/ChompocalypseCard.png",
+      link: "/game-chompo-calypse.html",
+      tags: ["undp", "e-waste", "educational", "ripplegames"]
+    },
+    {
+      title: "AWOOO",
+      image: "img/game-cards/AWOOOCard.png",
+      link: null,
+      tags: ["ripplegames"]
+    }
+  ];
+
   document.addEventListener("DOMContentLoaded", function () {
-
-
     const toggleButton = document.getElementById('menu-toggle');
     const collapsibleMenu = document.getElementById('navbar-collapsible');
 
     toggleButton.addEventListener('click', function() {
-        // Toggle the 'open' class on the collapsible wrapper
-        collapsibleMenu.classList.toggle('open');
-        
-        // Update ARIA attribute for accessibility
-        const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true' || false;
-        toggleButton.setAttribute('aria-expanded', !isExpanded);
-        
-        // Optional: Animate the hamburger icon (if you add the CSS for it)
-        toggleButton.classList.toggle('is-active'); 
+      collapsibleMenu.classList.toggle('open');
+      const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true';
+      toggleButton.setAttribute('aria-expanded', !isExpanded);
+      toggleButton.classList.toggle('is-active');
     });
 
-    // Optional: Close menu when a link is clicked (useful for anchor links)
     collapsibleMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', function() {
-            collapsibleMenu.classList.remove('open');
-            toggleButton.setAttribute('aria-expanded', 'false');
-            toggleButton.classList.remove('is-active');
-        });
+      link.addEventListener('click', function() {
+        collapsibleMenu.classList.remove('open');
+        toggleButton.setAttribute('aria-expanded', 'false');
+        toggleButton.classList.remove('is-active');
+      });
     });
 
     const urlParams = new URLSearchParams(window.location.search);
-    
-    // 2. Read the value of the 'q' parameter (the search query)
     let query = urlParams.get('q');
-    
-    // 3. Get the element where the query will be displayed
     const displayElement = document.getElementById('searchQueryDisplay');
+    const grid = document.getElementById('resultsGrid');
+    const noResults = document.getElementById('noResults');
 
-    if (query && displayElement) {
-        // Decode URI component (e.g., handles spaces and special characters)
-        query = decodeURIComponent(query.trim());
-        
-        // Ensure the query is not empty after trimming
-        if (query !== "") {
-            // Prepend a '#' and display the text
-            displayElement.textContent = '#' + query.toLowerCase().replace(/ /g, '');
-        } else {
-            // Handle case where query is empty (optional)
-            displayElement.textContent = '#';
-        }
-    } else if (displayElement) {
-        // Handle case where no query parameter exists (e.g., direct page load)
-        displayElement.textContent = '#';
+    if (query) {
+      query = decodeURIComponent(query.trim());
     }
 
-    
+    if (query) {
+      displayElement.textContent = '#' + query.toLowerCase().replace(/ /g, '');
+    } else {
+      displayElement.textContent = '#';
+    }
+
+    const needle = (query || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const matches = GAMES.filter(g =>
+      g.tags.some(t => t.replace(/[^a-z0-9]/g, '').includes(needle)) ||
+      g.title.toLowerCase().replace(/[^a-z0-9]/g, '').includes(needle)
+    );
+
+    if (matches.length === 0) {
+      noResults.style.display = '';
+    } else {
+      matches.forEach(game => {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        const inner = game.link
+          ? `<a href="${game.link}"><img src="${game.image}" alt="${game.title}" class="card-image" /></a>`
+          : `<img src="${game.image}" alt="${game.title}" class="card-image" />`;
+        const tagHtml = game.tags.map(t =>
+          `<a href="/search.html?q=${encodeURIComponent(t)}"><span class="card-tag">#${t.toUpperCase()}</span></a>`
+        ).join('');
+        card.innerHTML = `
+          ${inner}
+          <div class="card-content">
+            <h3 class="card-title">${game.title}</h3>
+            <div class="card-tags">${tagHtml}</div>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
   });
 </script>
 
