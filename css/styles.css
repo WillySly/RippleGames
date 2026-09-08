@@ -555,10 +555,7 @@ body {
   height: clamp(200px, 40vw, 340px);
 }
 
-.swiper-slide {
-  border-radius: 30px; /* Adjust this value to control the curve */
-    position: relative;
-}
+.swiper-slide { --image-card-radius: 30px; }
 
 
 .swiper-pagination {
@@ -566,16 +563,7 @@ body {
     margin-top: 10px;
   }
 
-/* Position the content block at the bottom left */
-.card-content {
-    position: absolute;
-    bottom: 0; /* Adjust this value to move it up slightly from the absolute bottom */
-    left: 0; /* Adjust this value to move it right slightly from the absolute left */
-    padding: 20px; /* Add some padding around the content */
-    width: 100%;
-    /* Add the gradient overlay if you want the smooth transition at the bottom */
-    /* background: linear-gradient(transparent, rgba(0, 0, 0, 0.5)); */
-}
+.card-content { padding: 20px; }
 
 /* Style the main title */
 .card-title {
@@ -868,26 +856,58 @@ body {
   gap: 24px;
 }
 
-.listing-card {
+.image-card {
+  --image-card-radius: 28px;
+  --image-card-border: transparent;
+  --image-card-border-hover: rgba(255, 255, 255, 0.45);
+  --image-card-gradient: linear-gradient(to bottom, transparent 35%, rgba(0, 0, 0, 0.94) 100%);
+  position: relative;
+  isolation: isolate;
   display: flex;
-  min-height: 300px;
+  min-width: 0;
   flex-direction: column;
   justify-content: flex-end;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 28px;
+  border: 1px solid var(--image-card-border);
+  border-radius: var(--image-card-radius);
   background: #151515 center/cover no-repeat;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-.listing-card:hover {
+.image-card::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: -2px;
+  border-radius: inherit;
+  background: var(--image-card-gradient);
+  pointer-events: none;
+}
+
+.image-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(255, 255, 255, 0.45);
+  border-color: var(--image-card-border-hover);
+}
+
+.image-card__content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.image-card__title,
+.image-card__description {
+  overflow-wrap: anywhere;
+}
+
+.listing-card {
+  --image-card-border: var(--border);
+  min-height: 300px;
 }
 
 .listing-card__body {
   padding: 70px 24px 24px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.94));
 }
 
 .listing-card__type {
@@ -944,13 +964,16 @@ body {
   justify-content: start;
 }
 
-#projects-content .listing-card__body {
-  padding-top: 120px;
-  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.42) 30%, rgba(0, 0, 0, 0.9) 72%, rgba(0, 0, 0, 0.98) 100%);
+.image-card--project {
+  --image-card-gradient: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.42) 30%, rgba(0, 0, 0, 0.9) 72%, rgba(0, 0, 0, 0.98) 100%);
 }
 
-#projects-content .listing-card__title,
-#projects-content .listing-card__description {
+.listing-card.image-card--project .listing-card__body {
+  padding-top: 120px;
+}
+
+.image-card--project .image-card__title,
+.image-card--project .image-card__description {
   color: #fff;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
 }
@@ -1088,12 +1111,8 @@ body {
 }
 
 .game-card {
-    position: relative;
-    border-radius: 30px;
-    overflow: hidden;
+    --image-card-radius: 30px;
     aspect-ratio: 16 / 10;
-    background-size: cover;
-    background-position: center;
     cursor: pointer;
 }
 
@@ -1103,38 +1122,21 @@ body {
     }
 }
 
-.game-card .card-content {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    padding: 20px;
-    width: 100%;
-    background: linear-gradient(transparent, rgba(0,0,0,0.6));
-    box-sizing: border-box;
-}
-
-.game-card.project-search-card {
+.image-card--compact {
+    --image-card-radius: 28px;
+    --image-card-border: var(--border);
     width: min(100%, 320px);
     min-height: 230px;
     align-self: start;
     justify-self: start;
-    border: 1px solid var(--border);
-    border-radius: 28px;
     aspect-ratio: 4 / 3;
-    transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-.game-card.project-search-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(255, 255, 255, 0.45);
-}
-
-.game-card.project-search-card .card-content {
+.image-card--compact .image-card__content {
     padding: 90px 18px 18px;
-    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.42) 30%, rgba(0, 0, 0, 0.9) 72%, rgba(0, 0, 0, 0.98) 100%);
 }
 
-.game-card.project-search-card .card-title {
+.image-card--compact .image-card__title {
     color: #fff;
     font-size: clamp(1.3rem, 2vw, 1.9rem);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);

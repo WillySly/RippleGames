@@ -143,14 +143,14 @@ function publicImageUrl(config, bucket, path) {
   return `${config.supabaseUrl}/storage/v1/object/public/${bucket}/${encodedPath}`;
 }
 
-function listingCard(item, type, href, imageUrl = '') {
-  const card = element('a', 'listing-card');
+function listingCard(item, type, href, imageUrl = '', modifiers = '') {
+  const card = element('a', `image-card listing-card ${modifiers}`.trim());
   card.href = href;
   if (imageUrl) card.style.backgroundImage = `url("${imageUrl.replaceAll('"', '%22')}")`;
-  const body = element('div', 'listing-card__body');
+  const body = element('div', 'image-card__content listing-card__body');
   if (type) body.append(element('span', 'listing-card__type', type));
-  body.append(element('h3', 'listing-card__title', item.title));
-  if (item.short_summary) body.append(element('p', 'listing-card__description', item.short_summary));
+  body.append(element('h3', 'image-card__title listing-card__title', item.title));
+  if (item.short_summary) body.append(element('p', 'image-card__description listing-card__description', item.short_summary));
   card.append(body);
   return card;
 }
@@ -190,7 +190,7 @@ async function renderProjects(config, cachedData = null) {
     if (group.short_description) groupNode.append(element('p', 'content-section__description', group.short_description));
     const grid = element('div', 'content-grid');
     groupProjects.forEach((project) => {
-      grid.append(listingCard(project, '', `/projects/${encodeURIComponent(project.slug)}`, project.coverUrl));
+      grid.append(listingCard(project, '', `/projects/${encodeURIComponent(project.slug)}`, project.coverUrl, 'image-card--project'));
     });
     groupNode.append(grid);
     section.append(groupNode);
@@ -453,16 +453,16 @@ async function renderNewsDetail(config, cachedData = null) {
 }
 
 function searchResultCard(item) {
-  const card = element('div', 'game-card');
-  if (item.type === 'Project') card.classList.add('project-search-card');
+  const card = element('div', 'image-card game-card');
+  if (item.type === 'Project') card.classList.add('image-card--project', 'image-card--compact');
   if (item.image) card.style.backgroundImage = `url("${item.image.replaceAll('"', '%22')}")`;
   if (item.link) {
     card.style.cursor = 'pointer';
     card.addEventListener('click', () => { window.location = item.link; });
   }
-  const content = element('div', 'card-content');
+  const content = element('div', 'image-card__content card-content');
   if (item.type && item.type !== 'Project') content.append(element('span', 'listing-card__type', item.type));
-  content.append(element('h2', 'card-title', item.title));
+  content.append(element('h2', 'image-card__title card-title', item.title));
   const tags = element('div', 'card-tags');
   item.tags.forEach((tagName) => {
     const link = element('a');
