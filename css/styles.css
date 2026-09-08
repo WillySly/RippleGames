@@ -1113,6 +1113,33 @@ body {
     box-sizing: border-box;
 }
 
+.game-card.project-search-card {
+    width: min(100%, 320px);
+    min-height: 230px;
+    align-self: start;
+    justify-self: start;
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    aspect-ratio: 4 / 3;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.game-card.project-search-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.45);
+}
+
+.game-card.project-search-card .card-content {
+    padding: 90px 18px 18px;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.42) 30%, rgba(0, 0, 0, 0.9) 72%, rgba(0, 0, 0, 0.98) 100%);
+}
+
+.game-card.project-search-card .card-title {
+    color: #fff;
+    font-size: clamp(1.3rem, 2vw, 1.9rem);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
 .search-no-results {
     padding: 0 var(--gutter);
     color: #aaa;

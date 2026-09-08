@@ -380,16 +380,14 @@ async function renderProjectDetail(config, cachedData = null) {
   }
   document.title = `${project.title} – Ripple Games`;
   container.replaceChildren(detailHeader(project.project_groups?.name || 'Project', project.title, project.short_summary));
+  const tags = tagsNode(project.project_tags);
+  if (tags) container.append(tags);
   if (coverUrl) {
     const image = element('img', 'content-cover');
     image.src = coverUrl;
     image.alt = project.title;
     container.append(image);
   }
-  const intro = element('div', 'project-detail__intro');
-  const tags = tagsNode(project.project_tags);
-  if (tags) intro.append(tags);
-  if (intro.childElementCount) container.append(intro);
   [
     contentSection('Overview', project.overview_html),
     contentSection('The Challenge', project.challenge_html),
@@ -456,13 +454,14 @@ async function renderNewsDetail(config, cachedData = null) {
 
 function searchResultCard(item) {
   const card = element('div', 'game-card');
+  if (item.type === 'Project') card.classList.add('project-search-card');
   if (item.image) card.style.backgroundImage = `url("${item.image.replaceAll('"', '%22')}")`;
   if (item.link) {
     card.style.cursor = 'pointer';
     card.addEventListener('click', () => { window.location = item.link; });
   }
   const content = element('div', 'card-content');
-  if (item.type) content.append(element('span', 'listing-card__type', item.type));
+  if (item.type && item.type !== 'Project') content.append(element('span', 'listing-card__type', item.type));
   content.append(element('h2', 'card-title', item.title));
   const tags = element('div', 'card-tags');
   item.tags.forEach((tagName) => {
