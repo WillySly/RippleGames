@@ -9,57 +9,212 @@
 </head>
 <body>
   <main class="admin-shell">
-    <section class="admin-card" id="loading-view" aria-live="polite">
+    <section class="admin-card admin-card--small" id="loading-view" aria-live="polite">
       <p>Checking your session…</p>
     </section>
 
-    <section class="admin-card" id="login-view" hidden>
+    <section class="admin-card admin-card--small" id="login-view" hidden>
       <p class="admin-eyebrow">Ripple Games</p>
       <h1>Admin login</h1>
-
       <form id="login-form">
         <label for="email">Email</label>
         <input id="email" name="email" type="email" autocomplete="username" required />
-
         <label for="password">Password</label>
         <input id="password" name="password" type="password" autocomplete="current-password" required />
-
-        <p class="admin-message" id="login-message" role="alert" hidden></p>
+        <p class="admin-message admin-message--error" id="login-message" role="alert" hidden></p>
         <button id="login-button" type="submit">Log in</button>
       </form>
     </section>
 
-    <section class="admin-card admin-dashboard" id="dashboard-view" hidden>
-      <div class="admin-dashboard__header">
+    <section class="admin-card" id="dashboard-view" hidden>
+      <header class="admin-header">
         <div>
           <p class="admin-eyebrow">Ripple Games</p>
-          <h1>Admin dashboard</h1>
+          <h1>Projects</h1>
           <p class="admin-user" id="admin-user"></p>
         </div>
-        <button class="button-secondary" id="logout-button" type="button">Logout</button>
+        <div class="header-actions">
+          <a class="button button-secondary" href="/">Public website</a>
+          <button class="button-secondary" id="logout-button" data-logout type="button">Logout</button>
+        </div>
+      </header>
+
+      <p class="admin-message" id="dashboard-message" role="status" hidden></p>
+
+      <div class="primary-actions">
+        <button id="new-group-button" type="button">+ New Project Group</button>
+        <button id="new-project-button" type="button">+ New Project</button>
       </div>
 
-      <p class="admin-message" id="dashboard-message" role="alert" hidden></p>
+      <section class="content-panel" aria-labelledby="groups-heading">
+        <div class="section-heading">
+          <div>
+            <h2 id="groups-heading">Project Groups</h2>
+            <p>Umbrella engagements that contain individual projects.</p>
+          </div>
+          <span class="count-badge" id="group-count">0</span>
+        </div>
+        <div id="group-list"></div>
+      </section>
 
-      <div class="admin-sections" aria-label="Content areas">
-        <section>
-          <h2>Projects</h2>
-          <p>Project management will be added in a future increment.</p>
-        </section>
-        <section>
-          <h2>News</h2>
-          <p>News management will be added in a future increment.</p>
-        </section>
-      </div>
-
-      <a class="public-link" href="/">Return to public website</a>
+      <section class="content-panel" aria-labelledby="projects-heading">
+        <div class="section-heading">
+          <div>
+            <h2 id="projects-heading">Projects</h2>
+            <p>Draft and published project content.</p>
+          </div>
+          <span class="count-badge" id="project-count">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Project</th><th>Project Group</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr>
+            </thead>
+            <tbody id="project-list"></tbody>
+          </table>
+        </div>
+      </section>
     </section>
 
-    <section class="admin-card" id="config-error-view" hidden>
+    <section class="admin-card admin-card--form" id="group-form-view" hidden>
+      <header class="form-header">
+        <div>
+          <p class="admin-eyebrow">Project Groups</p>
+          <h1 id="group-form-title">New Project Group</h1>
+        </div>
+        <button class="button-secondary" data-cancel-form type="button">Cancel</button>
+      </header>
+      <form id="group-form">
+        <input id="group-id" name="id" type="hidden" />
+        <label for="group-name">Name</label>
+        <input id="group-name" name="name" type="text" maxlength="160" required />
+        <label for="group-description">Short description</label>
+        <textarea id="group-description" name="short_description" maxlength="600" rows="5"></textarea>
+        <p class="field-help"><span id="group-description-count">0</span>/600 characters</p>
+        <p class="admin-message admin-message--error" id="group-form-message" role="alert" hidden></p>
+        <div class="form-actions">
+          <button type="submit" id="save-group-button">Save Project Group</button>
+          <button class="button-secondary" data-cancel-form type="button">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="admin-card admin-card--form" id="project-form-view" hidden>
+      <header class="form-header">
+        <div>
+          <p class="admin-eyebrow">Projects</p>
+          <h1 id="project-form-title">New Project</h1>
+        </div>
+        <button class="button-secondary" data-cancel-form type="button">Cancel</button>
+      </header>
+
+      <form id="project-form">
+        <input id="project-id" name="id" type="hidden" />
+
+        <fieldset>
+          <legend>Basic information</legend>
+          <div class="field-grid">
+            <div class="field field--wide">
+              <label for="project-title">Title</label>
+              <input id="project-title" name="title" type="text" maxlength="200" required />
+            </div>
+            <div class="field">
+              <label for="project-slug">Slug</label>
+              <input id="project-slug" name="slug" type="text" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required />
+              <p class="field-help">Auto-generated from the title; edit if needed.</p>
+            </div>
+            <div class="field">
+              <label for="project-group">Project Group</label>
+              <select id="project-group" name="project_group_id" required></select>
+            </div>
+            <div class="field field--wide">
+              <label for="project-summary">Short summary</label>
+              <textarea id="project-summary" name="short_summary" maxlength="1000" rows="4"></textarea>
+              <p class="field-help"><span id="project-summary-count">0</span>/1000 characters</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Cover image</legend>
+          <label for="cover-image">Upload image</label>
+          <input id="cover-image" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" />
+          <p class="field-help">JPEG, PNG, WebP, GIF, or AVIF. Maximum 10 MB.</p>
+          <div class="image-preview image-preview--cover" id="cover-preview"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Overview</legend>
+          <div class="rich-editor" data-editor="overview-editor">
+            <div class="rich-toolbar" aria-label="Overview formatting"></div>
+            <div class="rich-content" id="overview-editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Overview"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>The Challenge</legend>
+          <div class="rich-editor" data-editor="challenge-editor">
+            <div class="rich-toolbar" aria-label="Challenge formatting"></div>
+            <div class="rich-content" id="challenge-editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="The Challenge"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>What We Did</legend>
+          <div class="rich-editor" data-editor="work-editor">
+            <div class="rich-toolbar" aria-label="What We Did formatting"></div>
+            <div class="rich-content" id="work-editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="What We Did"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Gallery</legend>
+          <label for="gallery-images">Upload images</label>
+          <input id="gallery-images" name="gallery_images" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple />
+          <p class="field-help">Select multiple images. Maximum 10 MB per image.</p>
+          <div class="gallery-grid" id="gallery-preview"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Tags</legend>
+          <label for="project-tags">Tags</label>
+          <input id="project-tags" name="tags" type="text" placeholder="Game, Education, Event" />
+          <p class="field-help">Separate tags with commas.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Publishing</legend>
+          <p id="project-status-note">Choose whether to save this project as a draft or publish it.</p>
+          <p class="admin-message admin-message--error" id="project-form-message" role="alert" hidden></p>
+          <div class="form-actions">
+            <button class="button-secondary" type="submit" data-project-status="draft">Save as Draft</button>
+            <button type="submit" data-project-status="published">Publish</button>
+            <button class="button-secondary" data-cancel-form type="button">Cancel</button>
+          </div>
+        </fieldset>
+      </form>
+    </section>
+
+    <section class="admin-card admin-card--small" id="unauthorized-view" hidden>
+      <h1>Access denied</h1>
+      <p>Your account is authenticated but is not listed as a Ripple Games administrator.</p>
+      <button class="button-secondary" data-logout type="button">Logout</button>
+    </section>
+
+    <section class="admin-card admin-card--small" id="config-error-view" hidden>
       <h1>Admin unavailable</h1>
       <p id="config-error-message" role="alert">The authentication service could not be configured.</p>
     </section>
   </main>
+
+  <template id="rich-toolbar-template">
+    <button type="button" data-command="bold" title="Bold"><strong>B</strong></button>
+    <button type="button" data-command="italic" title="Italic"><em>I</em></button>
+    <button type="button" data-command="insertUnorderedList" title="Bulleted list">• List</button>
+    <button type="button" data-command="insertOrderedList" title="Numbered list">1. List</button>
+    <button type="button" data-command="createLink" title="Add link">Link</button>
+    <button type="button" data-command="unlink" title="Remove link">Unlink</button>
+  </template>
 
   <script type="module" src="/admin/admin.js"></script>
 </body>
