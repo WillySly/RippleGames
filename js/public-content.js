@@ -6,6 +6,24 @@ const CACHE_PREFIX = 'ripplegames-public-content-v1:';
 const CONFIG_CACHE_KEY = `${CACHE_PREFIX}config`;
 const CONTENT_CACHE_MAX_AGE = 30 * 60 * 1000;
 const CONFIG_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
+const MODULE_READY_AT = performance.now();
+const TIMING_PREFIX = '[RippleGames content timing]';
+
+function logTiming(page, phase, startedAt, details = {}) {
+  console.info(TIMING_PREFIX, {
+    page,
+    phase,
+    durationMs: Math.round((performance.now() - startedAt) * 10) / 10,
+    ...details,
+  });
+}
+
+console.info(TIMING_PREFIX, {
+  page: document.body.dataset.contentPage,
+  phase: 'Supabase SDK/module ready',
+  durationMs: Math.round(MODULE_READY_AT * 10) / 10,
+  measuredFrom: 'navigationStart',
+});
 
 function readCache(key, maxAge) {
   try {
@@ -105,7 +123,9 @@ function richTextNode(html) {
 }
 
 async function loadClient() {
+  const startedAt = performance.now();
   let config = readCache(CONFIG_CACHE_KEY, CONFIG_CACHE_MAX_AGE);
+  const configSource = config ? 'cache' : 'network';
   if (!config) {
     const response = await fetch('/api/admin-config', {
       headers: { Accept: 'application/json' },
@@ -115,9 +135,11 @@ async function loadClient() {
     writeCache(CONFIG_CACHE_KEY, config);
   }
   if (!config.supabaseUrl || !config.supabasePublishableKey) throw new Error('Supabase is not configured.');
-  return createClient(config.supabaseUrl, config.supabasePublishableKey, {
+  const client = createClient(config.supabaseUrl, config.supabasePublishableKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
+  logTiming(document.body.dataset.contentPage, 'config/client initialization', startedAt, { configSource });
+  return client;
 }
 
 async function signedImages(supabase, bucket, paths) {
@@ -143,15 +165,19 @@ function listingCard(item, type, href, imageUrl = '') {
 }
 
 async function renderProjects(supabase, cachedData = null) {
+  const page = 'projects';
   const container = document.getElementById('projects-content');
   let groups = cachedData?.groups || [];
   let projects = cachedData?.projects || [];
   if (!cachedData) {
+    const queryStartedAt = performance.now();
     const projectsResult = await supabase
       .from('projects')
       .select('id,title,slug,short_summary,cover_image_path,project_group_id,status,project_groups(id,name,short_description)')
       .eq('status', 'published')
       .order('title');
+    logTiming(page, 'main Supabase query', queryStartedAt, { rows: projectsResult.data?.length || 0 });
+    logTiming(page, 'tags/related-content queries', performance.now(), { separateRequests: 0, note: 'not requested on listing' });
     if (projectsResult.error) throw projectsResult.error;
     projects = projectsResult.data || [];
     groups = [...new Map(projects
@@ -159,12 +185,16 @@ async function renderProjects(supabase, cachedData = null) {
       .filter(Boolean)
       .map((group) => [group.id, group])).values()]
       .sort((a, b) => a.name.localeCompare(b.name));
+    const imagesStartedAt = performance.now();
     const imageUrls = await signedImages(supabase, PROJECT_BUCKET, projects.map((project) => project.cover_image_path));
+    logTiming(page, 'signed image URL fetching', imagesStartedAt, { images: Object.keys(imageUrls).length, requestMode: 'batch' });
     projects = projects.map((project) => ({ ...project, coverUrl: imageUrls[project.cover_image_path] || '' }));
   }
+  const renderStartedAt = performance.now();
   container.replaceChildren();
   if (!projects.length) {
     container.append(emptyState('No published projects yet', 'Published Projects will appear here.'));
+    logTiming(page, 'final render', renderStartedAt, { source: cachedData ? 'cache' : 'network', rows: 0 });
     return { groups, projects };
   }
 
@@ -186,6 +216,7 @@ async function renderProjects(supabase, cachedData = null) {
     section.append(groupNode);
     container.append(section);
   });
+  logTiming(page, 'final render', renderStartedAt, { source: cachedData ? 'cache' : 'network', rows: projects.length });
   return { groups, projects };
 }
 
@@ -257,6 +288,7 @@ function relatedLinks(title, items, collection) {
 }
 
 async function renderProjectDetail(supabase, cachedData = null) {
+  const page = 'project-detail';
   const container = document.getElementById('project-detail');
   const slug = contentSlug('projects');
   if (!slug) {
@@ -267,12 +299,20 @@ async function renderProjectDetail(supabase, cachedData = null) {
   let coverUrl = cachedData?.coverUrl || '';
   let galleryUrls = cachedData?.galleryUrls || [];
   if (!cachedData) {
+    const queryStartedAt = performance.now();
     const result = await supabase
       .from('projects')
       .select('id,title,slug,short_summary,cover_image_path,overview_html,challenge_html,what_we_did_html,status,project_groups(name),project_tags(tags(name)),project_gallery_images(storage_path,sort_order),news_projects(news_posts(title,slug,news_date))')
       .eq('slug', slug)
       .eq('status', 'published')
       .maybeSingle();
+    logTiming(page, 'main Supabase query', queryStartedAt, { rows: result.data ? 1 : 0 });
+    logTiming(page, 'tags/related-content queries', performance.now(), {
+      separateRequests: 0,
+      note: 'tags, gallery metadata, and related News are nested in the main query',
+      tags: result.data?.project_tags?.length || 0,
+      relatedItems: result.data?.news_projects?.length || 0,
+    });
     if (result.error) throw result.error;
     project = result.data;
   }
@@ -285,10 +325,13 @@ async function renderProjectDetail(supabase, cachedData = null) {
   const gallery = [...(project.project_gallery_images || [])].sort((a, b) => a.sort_order - b.sort_order);
   if (!cachedData) {
     const imagePaths = [project.cover_image_path, ...gallery.map((image) => image.storage_path)];
+    const imagesStartedAt = performance.now();
     const imageUrls = await signedImages(supabase, PROJECT_BUCKET, imagePaths);
+    logTiming(page, 'signed image URL fetching', imagesStartedAt, { images: Object.keys(imageUrls).length, requestMode: 'batch' });
     coverUrl = imageUrls[project.cover_image_path] || '';
     galleryUrls = gallery.map((image) => imageUrls[image.storage_path] || '');
   }
+  const renderStartedAt = performance.now();
   document.title = `${project.title} – Ripple Games`;
   container.replaceChildren(detailHeader(project.project_groups?.name || 'Project', project.title, project.short_summary));
   const tags = tagsNode(project.project_tags);
@@ -323,6 +366,7 @@ async function renderProjectDetail(supabase, cachedData = null) {
   const relatedNews = (project.news_projects || []).map((row) => row.news_posts).filter(Boolean);
   const related = relatedLinks('Related News', relatedNews, 'news');
   if (related) container.append(related);
+  logTiming(page, 'final render', renderStartedAt, { source: cachedData ? 'cache' : 'network' });
   return { project, coverUrl, galleryUrls };
 }
 
@@ -411,10 +455,12 @@ async function renderPage(page, supabase, cachedData = null) {
 
 async function initialize() {
   const page = document.body.dataset.contentPage;
+  const initializedAt = performance.now();
   const container = document.querySelector('[data-content-root]');
   const cacheKey = pageCacheKey(page);
   const cachedData = readCache(cacheKey, CONTENT_CACHE_MAX_AGE);
   const hasCache = validCachedData(page, cachedData);
+  console.info(TIMING_PREFIX, { page, phase: 'content cache lookup', durationMs: 0, cacheHit: hasCache });
 
   if (hasCache) await renderPage(page, null, cachedData);
 
@@ -423,8 +469,10 @@ async function initialize() {
     const freshData = await renderPage(page, supabase);
     if (freshData && validCachedData(page, freshData)) writeCache(cacheKey, freshData);
     else removeCache(cacheKey);
+    logTiming(page, 'initialization/background refresh total', initializedAt, { cacheHit: hasCache });
   } catch (error) {
     console.error(error);
+    logTiming(page, 'initialization/background refresh total', initializedAt, { cacheHit: hasCache, failed: true });
     if (!hasCache && container) renderError(container);
   }
 }
