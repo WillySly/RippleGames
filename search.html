@@ -29,9 +29,10 @@
     </button>
     <div class="navbar-collapsible" id="navbar-collapsible">
       <nav class="navbar-links">
-        <a class="navbar-link" href="/#featured">Our Games</a>
         <a class="navbar-link" href="/#about">About Us</a>
-        <a class="navbar-link" href="/#clients">Our Clients</a>
+        <a class="navbar-link" href="/games.html">Games</a>
+        <a class="navbar-link" href="/projects.html">Projects</a>
+        <a class="navbar-link" href="/news.html">News</a>
         <a class="navbar-link" href="/#contact">Contact</a>
       </nav>
 
@@ -83,24 +84,6 @@
   ];
 
   document.addEventListener("DOMContentLoaded", function () {
-    const toggleButton = document.getElementById('menu-toggle');
-    const collapsibleMenu = document.getElementById('navbar-collapsible');
-
-    toggleButton.addEventListener('click', function() {
-      collapsibleMenu.classList.toggle('open');
-      const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true';
-      toggleButton.setAttribute('aria-expanded', !isExpanded);
-      toggleButton.classList.toggle('is-active');
-    });
-
-    collapsibleMenu.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', function() {
-        collapsibleMenu.classList.remove('open');
-        toggleButton.setAttribute('aria-expanded', 'false');
-        toggleButton.classList.remove('is-active');
-      });
-    });
-
     const urlParams = new URLSearchParams(window.location.search);
     let query = urlParams.get('q');
     const displayElement = document.getElementById('searchQueryDisplay');
@@ -147,6 +130,7 @@
     }
   });
 </script>
+<script src="js/navigation.js"></script>
 
 </body>
 </html>

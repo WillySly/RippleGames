@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Explore Ripple Games projects grouped by engagement." />
+  <title>Projects – Ripple Games</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="img/maria.png" type="image/png" sizes="32x32">
+</head>
+<body>
+<nav class="navbar" aria-label="Main navigation">
+  <div class="navbar-container">
+    <div class="navbar-logo">
+      <a href="/" aria-label="Ripple Games home"><img src="img/logo.png" alt="" class="logo" /></a>
+    </div>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="navbar-collapsible" aria-label="Toggle navigation">
+      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+    <div class="navbar-collapsible" id="navbar-collapsible">
+      <div class="navbar-links">
+        <a class="navbar-link" href="/#about">About Us</a>
+        <a class="navbar-link" href="/games.html">Games</a>
+        <a class="navbar-link" href="/projects.html" aria-current="page">Projects</a>
+        <a class="navbar-link" href="/news.html">News</a>
+        <a class="navbar-link" href="/#contact">Contact</a>
+      </div>
+      <div class="navbar-actions">
+        <form action="/search.html" method="GET" class="search-form">
+          <div class="search-box">
+            <input type="search" placeholder="Search" class="search-input" name="q" aria-label="Search">
+            <button class="search-icon" aria-label="Submit search">&#x1F50D;</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="content-page">
+  <header class="content-page__hero">
+    <p class="content-page__eyebrow">Our work</p>
+    <h1 class="content-page__title">Projects</h1>
+    <p class="content-page__intro">Explore individual works within Ripple Games’ broader partnerships and engagements.</p>
+  </header>
+
+  <section class="content-section" aria-labelledby="undp-group">
+    <div class="project-group">
+      <p class="project-group__meta">Project group</p>
+      <h2 class="content-section__heading" id="undp-group">UNDP Georgia — E-waste Education</h2>
+      <p class="content-section__description">Work created with the UNDP Georgia Accelerator Lab to build awareness around electronic waste.</p>
+      <div class="content-grid">
+        <a class="listing-card" href="/game-chompo-calypse.html" style="background-image: url('img/game-cards/ChompocalypseCard.png')">
+          <div class="listing-card__body">
+            <span class="listing-card__type">Digital game</span>
+            <h3 class="listing-card__title">Chompo-Calypse</h3>
+            <p class="listing-card__description">An educational game about protecting a city from a growing tide of e-waste.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="js/navigation.js"></script>
+</body>
+</html>
