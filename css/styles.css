@@ -918,6 +918,43 @@ body {
   background: rgba(255, 255, 255, 0.04);
 }
 
+#projects-content .content-section {
+  padding-block: clamp(54px, 9vw, 104px);
+}
+
+#projects-content .content-section + .content-section {
+  border-top: 0;
+}
+
+#projects-content .project-group {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+#projects-content .content-section__heading {
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+#projects-content .content-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 350px));
+  justify-content: start;
+}
+
+#projects-content .listing-card__body {
+  padding-top: 120px;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.42) 30%, rgba(0, 0, 0, 0.9) 72%, rgba(0, 0, 0, 0.98) 100%);
+}
+
+#projects-content .listing-card__title,
+#projects-content .listing-card__description {
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
 .project-group__meta {
   margin: 0 0 8px;
   color: #f9cc61;

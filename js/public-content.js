@@ -139,11 +139,9 @@ function listingCard(item, type, href, imageUrl = '') {
   card.href = href;
   if (imageUrl) card.style.backgroundImage = `url("${imageUrl.replaceAll('"', '%22')}")`;
   const body = element('div', 'listing-card__body');
-  body.append(
-    element('span', 'listing-card__type', type),
-    element('h3', 'listing-card__title', item.title),
-    element('p', 'listing-card__description', item.short_summary || ''),
-  );
+  if (type) body.append(element('span', 'listing-card__type', type));
+  body.append(element('h3', 'listing-card__title', item.title));
+  if (item.short_summary) body.append(element('p', 'listing-card__description', item.short_summary));
   card.append(body);
   return card;
 }
@@ -179,14 +177,11 @@ async function renderProjects(config, cachedData = null) {
     if (!groupProjects.length) return;
     const section = element('section', 'content-section');
     const groupNode = element('div', 'project-group');
-    groupNode.append(
-      element('p', 'project-group__meta', 'Project group'),
-      element('h2', 'content-section__heading', group.name),
-    );
+    groupNode.append(element('h2', 'content-section__heading', group.name));
     if (group.short_description) groupNode.append(element('p', 'content-section__description', group.short_description));
     const grid = element('div', 'content-grid');
     groupProjects.forEach((project) => {
-      grid.append(listingCard(project, 'Project', `/projects/${encodeURIComponent(project.slug)}`, project.coverUrl));
+      grid.append(listingCard(project, '', `/projects/${encodeURIComponent(project.slug)}`, project.coverUrl));
     });
     groupNode.append(grid);
     section.append(groupNode);
