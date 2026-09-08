@@ -3,6 +3,8 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const STORAGE_BUCKET = 'project-images';
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']);
+const DRAFT_DATABASE = 'ripplegames-admin';
+const DRAFT_STORE = 'project-drafts';
 
 const views = {
   loading: document.getElementById('loading-view'),
@@ -61,9 +63,12 @@ const state = {
   objectUrls: [],
   slugManuallyEdited: false,
   sessionVersion: 0,
+  authorizedUserId: '',
 };
 
 let supabase;
+let draftDatabasePromise;
+let draftSaveTimer;
 
 function showOnly(viewName) {
   Object.entries(views).forEach(([name, element]) => {
@@ -92,6 +97,89 @@ function slugify(value) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .replace(/-{2,}/g, '-');
+}
+
+function openDraftDatabase() {
+  if (!draftDatabasePromise) {
+    draftDatabasePromise = new Promise((resolve, reject) => {
+      const request = window.indexedDB.open(DRAFT_DATABASE, 1);
+      request.addEventListener('upgradeneeded', () => {
+        if (!request.result.objectStoreNames.contains(DRAFT_STORE)) {
+          request.result.createObjectStore(DRAFT_STORE);
+        }
+      });
+      request.addEventListener('success', () => resolve(request.result));
+      request.addEventListener('error', () => reject(request.error));
+    });
+  }
+  return draftDatabasePromise;
+}
+
+async function readProjectDraft(userId) {
+  const database = await openDraftDatabase();
+  return new Promise((resolve, reject) => {
+    const request = database.transaction(DRAFT_STORE, 'readonly').objectStore(DRAFT_STORE).get(userId);
+    request.addEventListener('success', () => resolve(request.result || null));
+    request.addEventListener('error', () => reject(request.error));
+  });
+}
+
+async function writeProjectDraft(userId, draft) {
+  const database = await openDraftDatabase();
+  return new Promise((resolve, reject) => {
+    const request = database.transaction(DRAFT_STORE, 'readwrite').objectStore(DRAFT_STORE).put(draft, userId);
+    request.addEventListener('success', () => resolve());
+    request.addEventListener('error', () => reject(request.error));
+  });
+}
+
+async function clearProjectDraft() {
+  window.clearTimeout(draftSaveTimer);
+  if (!state.authorizedUserId) return;
+  try {
+    const database = await openDraftDatabase();
+    await new Promise((resolve, reject) => {
+      const request = database.transaction(DRAFT_STORE, 'readwrite').objectStore(DRAFT_STORE).delete(state.authorizedUserId);
+      request.addEventListener('success', () => resolve());
+      request.addEventListener('error', () => reject(request.error));
+    });
+  } catch (error) {
+    console.warn('The local Project draft could not be cleared.', error);
+  }
+}
+
+function captureProjectDraft() {
+  return {
+    projectId: document.getElementById('project-id').value || null,
+    title: elements.projectTitle.value,
+    slug: elements.projectSlug.value,
+    projectGroupId: elements.projectGroup.value,
+    shortSummary: elements.projectSummary.value,
+    overviewHtml: sanitizeRichText(document.getElementById('overview-editor').innerHTML),
+    challengeHtml: sanitizeRichText(document.getElementById('challenge-editor').innerHTML),
+    whatWeDidHtml: sanitizeRichText(document.getElementById('work-editor').innerHTML),
+    tags: elements.tags.value,
+    pendingCover: state.pendingCover,
+    removeCover: state.removeCover,
+    pendingGallery: state.pendingGallery,
+    removedGalleryIds: state.removedGallery.map((image) => image.id),
+    slugManuallyEdited: state.slugManuallyEdited,
+    savedAt: new Date().toISOString(),
+  };
+}
+
+async function persistProjectDraft() {
+  if (!state.authorizedUserId || views.projectForm.hidden) return;
+  try {
+    await writeProjectDraft(state.authorizedUserId, captureProjectDraft());
+  } catch (error) {
+    console.warn('The local Project draft could not be saved.', error);
+  }
+}
+
+function scheduleProjectDraftSave() {
+  window.clearTimeout(draftSaveTimer);
+  draftSaveTimer = window.setTimeout(persistProjectDraft, 300);
 }
 
 function createButton(label, className, handler) {
@@ -140,13 +228,16 @@ async function handleSession(session) {
   setMessage(elements.dashboardMessage);
 
   if (!session?.user) {
+    state.authorizedUserId = '';
     elements.adminUser.textContent = '';
     elements.loginForm.reset();
     showOnly('login');
     return;
   }
 
-  showOnly('loading');
+  const preserveOpenView = state.authorizedUserId === session.user.id
+    && (!views.projectForm.hidden || !views.groupForm.hidden);
+  if (!preserveOpenView) showOnly('loading');
   const { data, error } = await supabase
     .from('admin_users')
     .select('user_id')
@@ -160,13 +251,18 @@ async function handleSession(session) {
     return;
   }
   if (!data) {
+    state.authorizedUserId = '';
     showOnly('unauthorized');
     return;
   }
 
+  state.authorizedUserId = session.user.id;
   elements.adminUser.textContent = session.user.email || 'Authenticated administrator';
-  showOnly('dashboard');
+  if (preserveOpenView) return;
+
   await loadDashboard();
+  const restoredDraft = await restoreProjectDraft();
+  if (!restoredDraft) showOnly('dashboard');
 }
 
 async function initializeAdmin() {
@@ -382,10 +478,10 @@ async function signedUrl(path) {
   return data.signedUrl;
 }
 
-async function openProjectForm(projectId = null) {
+async function openProjectForm(projectId = null, { persistDraft = true } = {}) {
   if (!state.groups.length) {
     setMessage(elements.dashboardMessage, 'Create a Project Group before creating a Project.', true);
-    return;
+    return false;
   }
 
   elements.projectForm.reset();
@@ -404,7 +500,8 @@ async function openProjectForm(projectId = null) {
     updateProjectCounters();
     showOnly('projectForm');
     elements.projectTitle.focus();
-    return;
+    if (persistDraft) await persistProjectDraft();
+    return true;
   }
 
   showOnly('loading');
@@ -418,7 +515,7 @@ async function openProjectForm(projectId = null) {
   if (error) {
     showOnly('dashboard');
     setMessage(elements.dashboardMessage, formatError(error, 'Project could not be loaded.'), true);
-    return;
+    return false;
   }
 
   const project = projectResult.data;
@@ -451,6 +548,45 @@ async function openProjectForm(projectId = null) {
   renderCoverPreview();
   renderGalleryPreview();
   showOnly('projectForm');
+  if (persistDraft) await persistProjectDraft();
+  return true;
+}
+
+async function restoreProjectDraft() {
+  let draft;
+  try {
+    draft = await readProjectDraft(state.authorizedUserId);
+  } catch (error) {
+    console.warn('The local Project draft could not be read.', error);
+    return false;
+  }
+  if (!draft) return false;
+
+  const opened = await openProjectForm(draft.projectId, { persistDraft: false });
+  if (!opened) {
+    await clearProjectDraft();
+    return false;
+  }
+
+  elements.projectTitle.value = draft.title || '';
+  elements.projectSlug.value = draft.slug || '';
+  elements.projectGroup.value = draft.projectGroupId || '';
+  elements.projectSummary.value = draft.shortSummary || '';
+  document.getElementById('overview-editor').innerHTML = sanitizeRichText(draft.overviewHtml || '');
+  document.getElementById('challenge-editor').innerHTML = sanitizeRichText(draft.challengeHtml || '');
+  document.getElementById('work-editor').innerHTML = sanitizeRichText(draft.whatWeDidHtml || '');
+  elements.tags.value = draft.tags || '';
+  state.pendingCover = draft.pendingCover || null;
+  state.removeCover = Boolean(draft.removeCover);
+  state.pendingGallery = Array.isArray(draft.pendingGallery) ? draft.pendingGallery : [];
+  state.removedGallery = state.existingGallery.filter((image) =>
+    (draft.removedGalleryIds || []).includes(image.id));
+  state.slugManuallyEdited = Boolean(draft.slugManuallyEdited);
+  updateProjectCounters();
+  renderCoverPreview();
+  renderGalleryPreview();
+  setMessage(elements.projectFormMessage, 'Unsaved local changes restored.');
+  return true;
 }
 
 function previewCard(src, label, removeHandler) {
@@ -475,6 +611,7 @@ function renderCoverPreview() {
       state.pendingCover = null;
       elements.coverInput.value = '';
       renderCoverPreview();
+      scheduleProjectDraftSave();
     }));
     return;
   }
@@ -482,6 +619,7 @@ function renderCoverPreview() {
     elements.coverPreview.append(previewCard(state.coverSignedUrl, 'Current cover image', () => {
       state.removeCover = true;
       renderCoverPreview();
+      scheduleProjectDraftSave();
     }));
   }
 }
@@ -494,13 +632,15 @@ function renderGalleryPreview() {
       elements.galleryPreview.append(previewCard(image.signedUrl, `Gallery image ${index + 1}`, () => {
         state.removedGallery.push(image);
         renderGalleryPreview();
+        scheduleProjectDraftSave();
       }));
     });
 
   state.pendingGallery.forEach((file, index) => {
-    elements.galleryPreview.append(previewCard(objectUrl(file), file.name, () => {
-      state.pendingGallery.splice(index, 1);
-      renderGalleryPreview();
+      elements.galleryPreview.append(previewCard(objectUrl(file), file.name, () => {
+        state.pendingGallery.splice(index, 1);
+        renderGalleryPreview();
+        scheduleProjectDraftSave();
     }));
   });
 }
@@ -638,6 +778,7 @@ async function saveProject(event) {
       nextOrder += 1;
     }
 
+    await clearProjectDraft();
     resetProjectMediaState();
     showOnly('dashboard');
     await loadDashboard(requestedStatus === 'published' ? 'Project published.' : 'Project saved as Draft.');
@@ -773,13 +914,15 @@ elements.logoutButtons.forEach((button) => button.addEventListener('click', logo
 document.getElementById('new-group-button').addEventListener('click', () => openGroupForm());
 document.getElementById('new-project-button').addEventListener('click', () => openProjectForm());
 document.querySelectorAll('[data-cancel-form]').forEach((button) => {
-  button.addEventListener('click', () => {
+  button.addEventListener('click', async () => {
+    if (button.hasAttribute('data-discard-project')) await clearProjectDraft();
     resetProjectMediaState();
     showOnly('dashboard');
   });
 });
 elements.groupForm.addEventListener('submit', saveGroup);
 elements.projectForm.addEventListener('submit', saveProject);
+elements.projectForm.addEventListener('input', scheduleProjectDraftSave);
 elements.groupDescription.addEventListener('input', () => {
   elements.groupDescriptionCount.textContent = String(elements.groupDescription.value.length);
 });
@@ -809,6 +952,7 @@ elements.coverInput.addEventListener('change', () => {
     state.removeCover = false;
     renderCoverPreview();
     setMessage(elements.projectFormMessage);
+    scheduleProjectDraftSave();
   } catch (error) {
     elements.coverInput.value = '';
     setMessage(elements.projectFormMessage, error.message, true);
@@ -822,6 +966,7 @@ elements.galleryInput.addEventListener('change', () => {
     elements.galleryInput.value = '';
     renderGalleryPreview();
     setMessage(elements.projectFormMessage);
+    scheduleProjectDraftSave();
   } catch (error) {
     elements.galleryInput.value = '';
     setMessage(elements.projectFormMessage, error.message, true);
