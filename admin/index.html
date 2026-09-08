@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Admin – Ripple Games</title>
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <main class="admin-shell">
+    <section class="admin-card" id="loading-view" aria-live="polite">
+      <p>Checking your session…</p>
+    </section>
+
+    <section class="admin-card" id="login-view" hidden>
+      <p class="admin-eyebrow">Ripple Games</p>
+      <h1>Admin login</h1>
+
+      <form id="login-form">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" required />
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+
+        <p class="admin-message" id="login-message" role="alert" hidden></p>
+        <button id="login-button" type="submit">Log in</button>
+      </form>
+    </section>
+
+    <section class="admin-card admin-dashboard" id="dashboard-view" hidden>
+      <div class="admin-dashboard__header">
+        <div>
+          <p class="admin-eyebrow">Ripple Games</p>
+          <h1>Admin dashboard</h1>
+          <p class="admin-user" id="admin-user"></p>
+        </div>
+        <button class="button-secondary" id="logout-button" type="button">Logout</button>
+      </div>
+
+      <p class="admin-message" id="dashboard-message" role="alert" hidden></p>
+
+      <div class="admin-sections" aria-label="Content areas">
+        <section>
+          <h2>Projects</h2>
+          <p>Project management will be added in a future increment.</p>
+        </section>
+        <section>
+          <h2>News</h2>
+          <p>News management will be added in a future increment.</p>
+        </section>
+      </div>
+
+      <a class="public-link" href="/">Return to public website</a>
+    </section>
+
+    <section class="admin-card" id="config-error-view" hidden>
+      <h1>Admin unavailable</h1>
+      <p id="config-error-message" role="alert">The authentication service could not be configured.</p>
+    </section>
+  </main>
+
+  <script type="module" src="/admin/admin.js"></script>
+</body>
+</html>
