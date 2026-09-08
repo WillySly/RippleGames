@@ -257,6 +257,88 @@ function relatedLinks(title, items, collection) {
   return section;
 }
 
+function galleryCarousel(urls, projectTitle) {
+  const section = element('section', 'content-section content-detail__section');
+  const header = element('div', 'gallery-heading');
+  header.append(element('h2', 'content-section__heading', 'Gallery'));
+
+  const controls = element('div', 'gallery-controls');
+  const previous = element('button', 'gallery-arrow', '←');
+  const next = element('button', 'gallery-arrow', '→');
+  previous.type = 'button';
+  next.type = 'button';
+  previous.setAttribute('aria-label', 'Previous gallery images');
+  next.setAttribute('aria-label', 'Next gallery images');
+  controls.append(previous, next);
+  if (urls.length > 1) header.append(controls);
+
+  const viewport = element('div', 'gallery-viewport');
+  const track = element('div', 'content-gallery');
+  const dialog = document.createElement('dialog');
+  dialog.className = 'gallery-lightbox';
+  dialog.setAttribute('aria-label', `${projectTitle} gallery image viewer`);
+  const close = element('button', 'gallery-lightbox__close', '×');
+  const lightboxPrevious = element('button', 'gallery-lightbox__arrow gallery-lightbox__arrow--previous', '←');
+  const lightboxNext = element('button', 'gallery-lightbox__arrow gallery-lightbox__arrow--next', '→');
+  const lightboxImage = element('img', 'gallery-lightbox__image');
+  const counter = element('p', 'gallery-lightbox__counter');
+  [close, lightboxPrevious, lightboxNext].forEach((button) => { button.type = 'button'; });
+  close.setAttribute('aria-label', 'Close gallery');
+  lightboxPrevious.setAttribute('aria-label', 'Previous image');
+  lightboxNext.setAttribute('aria-label', 'Next image');
+  let currentIndex = 0;
+
+  const showImage = (index) => {
+    currentIndex = (index + urls.length) % urls.length;
+    lightboxImage.src = urls[currentIndex];
+    lightboxImage.alt = `${projectTitle} gallery image ${currentIndex + 1}`;
+    counter.textContent = `${currentIndex + 1} / ${urls.length}`;
+  };
+
+  urls.forEach((url, index) => {
+    const imageButton = element('button', 'gallery-slide');
+    imageButton.type = 'button';
+    imageButton.setAttribute('aria-label', `Open gallery image ${index + 1}`);
+    const image = element('img');
+    image.src = url;
+    image.alt = `${projectTitle} gallery image ${index + 1}`;
+    image.loading = 'lazy';
+    imageButton.append(image);
+    imageButton.addEventListener('click', () => {
+      showImage(index);
+      dialog.showModal();
+    });
+    track.append(imageButton);
+  });
+
+  const scrollGallery = (direction) => {
+    const slide = track.firstElementChild;
+    if (!slide) return;
+    viewport.scrollBy({ left: direction * (slide.getBoundingClientRect().width + 18), behavior: 'smooth' });
+  };
+  previous.addEventListener('click', () => scrollGallery(-1));
+  next.addEventListener('click', () => scrollGallery(1));
+  close.addEventListener('click', () => dialog.close());
+  lightboxPrevious.addEventListener('click', () => showImage(currentIndex - 1));
+  lightboxNext.addEventListener('click', () => showImage(currentIndex + 1));
+  dialog.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') showImage(currentIndex - 1);
+    if (event.key === 'ArrowRight') showImage(currentIndex + 1);
+  });
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+
+  if (urls.length === 1) {
+    lightboxPrevious.hidden = true;
+    lightboxNext.hidden = true;
+  }
+  dialog.append(close, lightboxPrevious, lightboxImage, lightboxNext, counter);
+  viewport.append(track);
+  section.append(header, viewport, dialog);
+  return section;
+}
+
 async function renderProjectDetail(config, cachedData = null) {
   const container = document.getElementById('project-detail');
   const slug = contentSlug('projects');
@@ -288,9 +370,10 @@ async function renderProjectDetail(config, cachedData = null) {
     galleryUrls = gallery.map((image) => publicImageUrl(config, PROJECT_BUCKET, image.storage_path));
   }
   document.title = `${project.title} – Ripple Games`;
-  container.replaceChildren(detailHeader(project.project_groups?.name || 'Project', project.title, project.short_summary));
+  const hero = detailHeader(project.project_groups?.name || 'Project', project.title, project.short_summary);
   const tags = tagsNode(project.project_tags);
-  if (tags) container.append(tags);
+  if (tags) hero.append(tags);
+  container.replaceChildren(hero);
   if (coverUrl) {
     const image = element('img', 'content-cover');
     image.src = coverUrl;
@@ -305,18 +388,7 @@ async function renderProjectDetail(config, cachedData = null) {
 
   const validGallery = galleryUrls.filter(Boolean);
   if (validGallery.length) {
-    const section = element('section', 'content-section content-detail__section');
-    section.append(element('h2', 'content-section__heading', 'Gallery'));
-    const grid = element('div', 'content-gallery');
-    validGallery.forEach((url, index) => {
-      const image = document.createElement('img');
-      image.src = url;
-      image.alt = `${project.title} gallery image ${index + 1}`;
-      image.loading = 'lazy';
-      grid.append(image);
-    });
-    section.append(grid);
-    container.append(section);
+    container.append(galleryCarousel(validGallery, project.title));
   }
   const relatedNews = (project.news_projects || []).map((row) => row.news_posts).filter(Boolean);
   const related = relatedLinks('Related News', relatedNews, 'news');
