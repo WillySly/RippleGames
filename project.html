@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="News and updates from Ripple Games." />
-  <title>News – Ripple Games</title>
-  <link rel="stylesheet" href="css/styles.css" />
-  <link rel="icon" href="img/maria.png" type="image/png" sizes="32x32">
+  <meta name="description" content="A Ripple Games project." />
+  <title>Project – Ripple Games</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" href="/img/maria.png" type="image/png" sizes="32x32">
 </head>
-<body data-content-page="news">
+<body data-content-page="project-detail">
 <nav class="navbar" aria-label="Main navigation">
   <div class="navbar-container">
     <div class="navbar-logo">
-      <a href="/" aria-label="Ripple Games home"><img src="img/logo.png" alt="" class="logo" /></a>
+      <a href="/" aria-label="Ripple Games home"><img src="/img/logo.png" alt="" class="logo" /></a>
     </div>
     <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="navbar-collapsible" aria-label="Toggle navigation">
       <span class="bar"></span><span class="bar"></span><span class="bar"></span>
@@ -21,8 +21,8 @@
       <div class="navbar-links">
         <a class="navbar-link" href="/#about">About Us</a>
         <a class="navbar-link" href="/games.html">Games</a>
-        <a class="navbar-link" href="/projects.html">Projects</a>
-        <a class="navbar-link" href="/news.html" aria-current="page">News</a>
+        <a class="navbar-link" href="/projects.html" aria-current="page">Projects</a>
+        <a class="navbar-link" href="/news.html">News</a>
         <a class="navbar-link" href="/#contact">Contact</a>
       </div>
       <div class="navbar-actions">
@@ -37,20 +37,10 @@
   </div>
 </nav>
 
-<main class="content-page">
-  <header class="content-page__hero">
-    <p class="content-page__eyebrow">Stories & updates</p>
-    <h1 class="content-page__title">News</h1>
-    <p class="content-page__intro">Activities, events, launches, and stories from Ripple Games and the projects connected to them.</p>
-  </header>
-
-  <div id="news-content" data-content-root>
-    <section class="content-section">
-      <div class="empty-state"><h2>Loading News…</h2></div>
-    </section>
-  </div>
+<main class="content-page content-detail" id="project-detail" data-content-root>
+  <div class="empty-state"><h1>Loading Project…</h1></div>
 </main>
-<script src="js/navigation.js"></script>
-<script type="module" src="js/public-content.js"></script>
+<script src="/js/navigation.js"></script>
+<script type="module" src="/js/public-content.js"></script>
 </body>
 </html>

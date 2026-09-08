@@ -10,3 +10,13 @@
   from = "/admin"
   to = "/admin/index.html"
   status = 200
+
+[[redirects]]
+  from = "/projects/:slug"
+  to = "/project.html?slug=:slug"
+  status = 200
+
+[[redirects]]
+  from = "/news/:slug"
+  to = "/news-post.html?slug=:slug"
+  status = 200

@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" href="img/maria.png" type="image/png" sizes="32x32">
 </head>
-<body>
+<body data-content-page="projects">
 <nav class="navbar" aria-label="Main navigation">
   <div class="navbar-container">
     <div class="navbar-logo">
@@ -44,23 +44,13 @@
     <p class="content-page__intro">Explore individual works within Ripple Games’ broader partnerships and engagements.</p>
   </header>
 
-  <section class="content-section" aria-labelledby="undp-group">
-    <div class="project-group">
-      <p class="project-group__meta">Project group</p>
-      <h2 class="content-section__heading" id="undp-group">UNDP Georgia — E-waste Education</h2>
-      <p class="content-section__description">Work created with the UNDP Georgia Accelerator Lab to build awareness around electronic waste.</p>
-      <div class="content-grid">
-        <a class="listing-card" href="/game-chompo-calypse.html" style="background-image: url('img/game-cards/ChompocalypseCard.png')">
-          <div class="listing-card__body">
-            <span class="listing-card__type">Digital game</span>
-            <h3 class="listing-card__title">Chompo-Calypse</h3>
-            <p class="listing-card__description">An educational game about protecting a city from a growing tide of e-waste.</p>
-          </div>
-        </a>
-      </div>
-    </div>
-  </section>
+  <div id="projects-content" data-content-root>
+    <section class="content-section">
+      <div class="empty-state"><h2>Loading Projects…</h2></div>
+    </section>
+  </div>
 </main>
 <script src="js/navigation.js"></script>
+<script type="module" src="js/public-content.js"></script>
 </body>
 </html>

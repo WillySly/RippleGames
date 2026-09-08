@@ -945,6 +945,18 @@ body {
   color: var(--muted);
 }
 
+/* Functional CMS content detail layout */
+.content-detail__hero { padding-bottom: clamp(28px, 5vw, 52px); }
+.content-detail > .content-tags, .content-detail > .content-cover { width: min(calc(100% - 40px), var(--content-max)); margin-inline: auto; }
+.content-tags { margin-block: 28px; }
+.content-cover { max-height: 650px; border-radius: 28px; object-fit: cover; }
+.content-detail__section { max-width: 850px; }
+.content-rich-text { color: var(--muted); font-size: 1.05rem; }
+.content-rich-text a, .content-related a { text-decoration: underline; text-underline-offset: 3px; }
+.content-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 18px; }
+.content-gallery img { width: 100%; height: 260px; border-radius: 18px; object-fit: cover; }
+.content-related { display: grid; gap: 10px; padding-left: 22px; }
+
 @media (max-width: 900px) {
   .content-page {
     padding-top: 108px;
