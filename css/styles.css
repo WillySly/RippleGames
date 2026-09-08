@@ -989,6 +989,7 @@ body {
 .content-detail__hero .content-tags { margin: 24px 0 0; }
 #project-detail .content-tags .tag { background: #f9cc61; color: #000; }
 .content-cover { max-height: 650px; border-radius: 28px; object-fit: cover; }
+.project-detail__intro { width: min(calc(100% - 40px), 850px); margin: 34px auto 0; }
 .content-detail__section { max-width: 850px; }
 .content-rich-text { color: var(--muted); font-size: 1.05rem; }
 .content-rich-text a, .content-related a { text-decoration: underline; text-underline-offset: 3px; }

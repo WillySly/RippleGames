@@ -14,7 +14,7 @@
 />
 <script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
 </head>
-<body>
+<body data-content-page="search">
 
 <nav class="navbar">
   <div class="navbar-container">
@@ -63,12 +63,12 @@
         <span class="search-term-tag" id="searchQueryDisplay">#searchtag</span>
     </section>
 
-    <section class="game-card-grid" id="resultsGrid"></section>
-    <p class="search-no-results" id="noResults" style="display:none;">No games found.</p>
+    <section class="game-card-grid" id="resultsGrid" data-content-root></section>
+    <p class="search-no-results" id="noResults" style="display:none;">No results found.</p>
 </main>
 
 <script>
-  const GAMES = [
+  window.RIPPLE_GAMES_SEARCH_GAMES = [
     {
       title: "CHOMPO-CALYPSE",
       image: "img/game-cards/ChompocalypseCard.png",
@@ -83,54 +83,9 @@
     }
   ];
 
-  document.addEventListener("DOMContentLoaded", function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    let query = urlParams.get('q');
-    const displayElement = document.getElementById('searchQueryDisplay');
-    const grid = document.getElementById('resultsGrid');
-    const noResults = document.getElementById('noResults');
-
-    if (query) {
-      query = decodeURIComponent(query.trim());
-    }
-
-    if (query) {
-      displayElement.textContent = '#' + query.toLowerCase().replace(/ /g, '');
-    } else {
-      displayElement.textContent = '#';
-    }
-
-    const needle = (query || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const matches = GAMES.filter(g =>
-      g.tags.some(t => t.replace(/[^a-z0-9]/g, '').includes(needle)) ||
-      g.title.toLowerCase().replace(/[^a-z0-9]/g, '').includes(needle)
-    );
-
-    if (matches.length === 0) {
-      noResults.style.display = '';
-    } else {
-      matches.forEach(game => {
-        const card = document.createElement('div');
-        card.className = 'game-card';
-        card.style.backgroundImage = `url('${game.image}')`;
-        if (game.link) {
-          card.style.cursor = 'pointer';
-          card.addEventListener('click', () => window.location = game.link);
-        }
-        const tagHtml = game.tags.map(t =>
-          `<a href="/search.html?q=${encodeURIComponent(t)}" onclick="event.stopPropagation()"><span class="tag">#${t.toUpperCase()}</span></a>`
-        ).join('');
-        card.innerHTML = `
-          <div class="card-content">
-            <h2 class="card-title">${game.title}</h2>
-            <div class="card-tags">${tagHtml}</div>
-          </div>`;
-        grid.appendChild(card);
-      });
-    }
-  });
 </script>
 <script src="js/navigation.js"></script>
+<script type="module" src="js/public-content.js"></script>
 
 </body>
 </html>

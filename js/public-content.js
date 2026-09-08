@@ -62,8 +62,17 @@ function tagsNode(rows) {
   const names = (rows || []).map((row) => row.tags?.name).filter(Boolean);
   if (!names.length) return null;
   const wrapper = element('div', 'card-tags content-tags');
-  names.forEach((name) => wrapper.append(element('span', 'tag', `#${name}`)));
+  names.forEach((name) => {
+    const link = element('a');
+    link.href = `/search.html?q=${encodeURIComponent(name)}`;
+    link.append(element('span', 'tag', `#${name}`));
+    wrapper.append(link);
+  });
   return wrapper;
+}
+
+function normalizeSearchValue(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function richTextNode(html) {
@@ -370,16 +379,17 @@ async function renderProjectDetail(config, cachedData = null) {
     galleryUrls = gallery.map((image) => publicImageUrl(config, PROJECT_BUCKET, image.storage_path));
   }
   document.title = `${project.title} – Ripple Games`;
-  const hero = detailHeader(project.project_groups?.name || 'Project', project.title, project.short_summary);
-  const tags = tagsNode(project.project_tags);
-  if (tags) hero.append(tags);
-  container.replaceChildren(hero);
+  container.replaceChildren(detailHeader(project.project_groups?.name || 'Project', project.title, project.short_summary));
   if (coverUrl) {
     const image = element('img', 'content-cover');
     image.src = coverUrl;
     image.alt = project.title;
     container.append(image);
   }
+  const intro = element('div', 'project-detail__intro');
+  const tags = tagsNode(project.project_tags);
+  if (tags) intro.append(tags);
+  if (intro.childElementCount) container.append(intro);
   [
     contentSection('Overview', project.overview_html),
     contentSection('The Challenge', project.challenge_html),
@@ -444,6 +454,86 @@ async function renderNewsDetail(config, cachedData = null) {
   return { post, coverUrl };
 }
 
+function searchResultCard(item) {
+  const card = element('div', 'game-card');
+  if (item.image) card.style.backgroundImage = `url("${item.image.replaceAll('"', '%22')}")`;
+  if (item.link) {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', () => { window.location = item.link; });
+  }
+  const content = element('div', 'card-content');
+  if (item.type) content.append(element('span', 'listing-card__type', item.type));
+  content.append(element('h2', 'card-title', item.title));
+  const tags = element('div', 'card-tags');
+  item.tags.forEach((tagName) => {
+    const link = element('a');
+    link.href = `/search.html?q=${encodeURIComponent(tagName)}`;
+    link.addEventListener('click', (event) => event.stopPropagation());
+    link.append(element('span', 'tag', `#${tagName.toUpperCase()}`));
+    tags.append(link);
+  });
+  content.append(tags);
+  card.append(content);
+  return card;
+}
+
+async function renderSearch(config, cachedData = null) {
+  const grid = document.getElementById('resultsGrid');
+  const noResults = document.getElementById('noResults');
+  const display = document.getElementById('searchQueryDisplay');
+  const query = new URLSearchParams(window.location.search).get('q')?.trim() || '';
+  const needle = normalizeSearchValue(query);
+  display.textContent = query ? `#${query.toLowerCase().replace(/ /g, '')}` : '#';
+
+  let projects = cachedData?.projects || [];
+  let posts = cachedData?.posts || [];
+  if (!cachedData) {
+    [projects, posts] = await Promise.all([
+      queryTable(config, 'projects', {
+        select: 'id,title,slug,cover_image_path,status,project_tags(tags(name))',
+        status: 'eq.published',
+        order: 'title.asc',
+      }),
+      queryTable(config, 'news_posts', {
+        select: 'id,title,slug,cover_image_path,status,news_tags(tags(name))',
+        status: 'eq.published',
+        order: 'news_date.desc',
+      }),
+    ]);
+    projects = projects.map((project) => ({
+      ...project,
+      image: publicImageUrl(config, PROJECT_BUCKET, project.cover_image_path),
+    }));
+    posts = posts.map((post) => ({
+      ...post,
+      image: publicImageUrl(config, NEWS_BUCKET, post.cover_image_path),
+    }));
+  }
+
+  const games = (window.RIPPLE_GAMES_SEARCH_GAMES || []).map((game) => ({ ...game, type: '' }));
+  const projectResults = projects.map((project) => ({
+    title: project.title,
+    image: project.image,
+    link: `/projects/${encodeURIComponent(project.slug)}`,
+    tags: (project.project_tags || []).map((row) => row.tags?.name).filter(Boolean),
+    type: 'Project',
+  }));
+  const newsResults = posts.map((post) => ({
+    title: post.title,
+    image: post.image,
+    link: `/news/${encodeURIComponent(post.slug)}`,
+    tags: (post.news_tags || []).map((row) => row.tags?.name).filter(Boolean),
+    type: 'News',
+  }));
+  const matches = [...games, ...projectResults, ...newsResults].filter((item) =>
+    item.tags.some((tag) => normalizeSearchValue(tag).includes(needle))
+    || normalizeSearchValue(item.title).includes(needle));
+
+  grid.replaceChildren(...matches.map(searchResultCard));
+  noResults.style.display = matches.length ? 'none' : '';
+  return { projects, posts };
+}
+
 function pageCacheKey(page) {
   if (page === 'project-detail') return `${CACHE_PREFIX}project:${contentSlug('projects')}`;
   if (page === 'news-detail') return `${CACHE_PREFIX}news-post:${contentSlug('news')}`;
@@ -466,6 +556,12 @@ function validCachedData(page, data) {
   if (page === 'news-detail') {
     return data.post?.status === 'published' && data.post.slug === contentSlug('news');
   }
+  if (page === 'search') {
+    return Array.isArray(data.projects)
+      && Array.isArray(data.posts)
+      && data.projects.every((project) => project?.status === 'published')
+      && data.posts.every((post) => post?.status === 'published');
+  }
   return false;
 }
 
@@ -474,6 +570,7 @@ async function renderPage(page, config, cachedData = null) {
   if (page === 'news') return renderNewsListing(config, cachedData);
   if (page === 'project-detail') return renderProjectDetail(config, cachedData);
   if (page === 'news-detail') return renderNewsDetail(config, cachedData);
+  if (page === 'search') return renderSearch(config, cachedData);
   return null;
 }
 
@@ -485,6 +582,7 @@ async function initialize() {
   const hasCache = validCachedData(page, cachedData);
 
   if (hasCache) await renderPage(page, null, cachedData);
+  else if (page === 'search') await renderSearch(null, { projects: [], posts: [] });
 
   try {
     const config = await loadConfig();
@@ -493,7 +591,7 @@ async function initialize() {
     else removeCache(cacheKey);
   } catch (error) {
     console.error(error);
-    if (!hasCache && container) renderError(container);
+    if (!hasCache && page !== 'search' && container) renderError(container);
   }
 }
 
