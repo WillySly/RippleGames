@@ -1,29 +1,9 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
 const PROJECT_BUCKET = 'project-images';
 const NEWS_BUCKET = 'news-images';
-const CACHE_PREFIX = 'ripplegames-public-content-v1:';
+const CACHE_PREFIX = 'ripplegames-public-content-v2:';
 const CONFIG_CACHE_KEY = `${CACHE_PREFIX}config`;
 const CONTENT_CACHE_MAX_AGE = 30 * 60 * 1000;
 const CONFIG_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
-const MODULE_READY_AT = performance.now();
-const TIMING_PREFIX = '[RippleGames content timing]';
-
-function logTiming(page, phase, startedAt, details = {}) {
-  console.info(TIMING_PREFIX, {
-    page,
-    phase,
-    durationMs: Math.round((performance.now() - startedAt) * 10) / 10,
-    ...details,
-  });
-}
-
-console.info(TIMING_PREFIX, {
-  page: document.body.dataset.contentPage,
-  phase: 'Supabase SDK/module ready',
-  durationMs: Math.round(MODULE_READY_AT * 10) / 10,
-  measuredFrom: 'navigationStart',
-});
 
 function readCache(key, maxAge) {
   try {
@@ -122,10 +102,8 @@ function richTextNode(html) {
   return wrapper;
 }
 
-async function loadClient() {
-  const startedAt = performance.now();
+async function loadConfig() {
   let config = readCache(CONFIG_CACHE_KEY, CONFIG_CACHE_MAX_AGE);
-  const configSource = config ? 'cache' : 'network';
   if (!config) {
     const response = await fetch('/api/admin-config', {
       headers: { Accept: 'application/json' },
@@ -135,19 +113,25 @@ async function loadClient() {
     writeCache(CONFIG_CACHE_KEY, config);
   }
   if (!config.supabaseUrl || !config.supabasePublishableKey) throw new Error('Supabase is not configured.');
-  const client = createClient(config.supabaseUrl, config.supabasePublishableKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  });
-  logTiming(document.body.dataset.contentPage, 'config/client initialization', startedAt, { configSource });
-  return client;
+  return config;
 }
 
-async function signedImages(supabase, bucket, paths) {
-  const uniquePaths = [...new Set(paths.filter(Boolean))];
-  if (!uniquePaths.length) return {};
-  const { data, error } = await supabase.storage.from(bucket).createSignedUrls(uniquePaths, 3600);
-  if (error) return {};
-  return Object.fromEntries((data || []).filter((item) => item.signedUrl).map((item) => [item.path, item.signedUrl]));
+async function queryTable(config, table, parameters) {
+  const query = new URLSearchParams(parameters);
+  const response = await fetch(`${config.supabaseUrl}/rest/v1/${table}?${query}`, {
+    headers: {
+      Accept: 'application/json',
+      apikey: config.supabasePublishableKey,
+    },
+  });
+  if (!response.ok) throw new Error(`Content request failed (${response.status}).`);
+  return response.json();
+}
+
+function publicImageUrl(config, bucket, path) {
+  if (!path) return '';
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+  return `${config.supabaseUrl}/storage/v1/object/public/${bucket}/${encodedPath}`;
 }
 
 function listingCard(item, type, href, imageUrl = '') {
@@ -164,37 +148,29 @@ function listingCard(item, type, href, imageUrl = '') {
   return card;
 }
 
-async function renderProjects(supabase, cachedData = null) {
-  const page = 'projects';
+async function renderProjects(config, cachedData = null) {
   const container = document.getElementById('projects-content');
   let groups = cachedData?.groups || [];
   let projects = cachedData?.projects || [];
   if (!cachedData) {
-    const queryStartedAt = performance.now();
-    const projectsResult = await supabase
-      .from('projects')
-      .select('id,title,slug,short_summary,cover_image_path,project_group_id,status,project_groups(id,name,short_description)')
-      .eq('status', 'published')
-      .order('title');
-    logTiming(page, 'main Supabase query', queryStartedAt, { rows: projectsResult.data?.length || 0 });
-    logTiming(page, 'tags/related-content queries', performance.now(), { separateRequests: 0, note: 'not requested on listing' });
-    if (projectsResult.error) throw projectsResult.error;
-    projects = projectsResult.data || [];
+    projects = await queryTable(config, 'projects', {
+      select: 'id,title,slug,short_summary,cover_image_path,project_group_id,status,project_groups(id,name,short_description)',
+      status: 'eq.published',
+      order: 'title.asc',
+    });
     groups = [...new Map(projects
       .map((project) => project.project_groups)
       .filter(Boolean)
       .map((group) => [group.id, group])).values()]
       .sort((a, b) => a.name.localeCompare(b.name));
-    const imagesStartedAt = performance.now();
-    const imageUrls = await signedImages(supabase, PROJECT_BUCKET, projects.map((project) => project.cover_image_path));
-    logTiming(page, 'signed image URL fetching', imagesStartedAt, { images: Object.keys(imageUrls).length, requestMode: 'batch' });
-    projects = projects.map((project) => ({ ...project, coverUrl: imageUrls[project.cover_image_path] || '' }));
+    projects = projects.map((project) => ({
+      ...project,
+      coverUrl: publicImageUrl(config, PROJECT_BUCKET, project.cover_image_path),
+    }));
   }
-  const renderStartedAt = performance.now();
   container.replaceChildren();
   if (!projects.length) {
     container.append(emptyState('No published projects yet', 'Published Projects will appear here.'));
-    logTiming(page, 'final render', renderStartedAt, { source: cachedData ? 'cache' : 'network', rows: 0 });
     return { groups, projects };
   }
 
@@ -216,23 +192,22 @@ async function renderProjects(supabase, cachedData = null) {
     section.append(groupNode);
     container.append(section);
   });
-  logTiming(page, 'final render', renderStartedAt, { source: cachedData ? 'cache' : 'network', rows: projects.length });
   return { groups, projects };
 }
 
-async function renderNewsListing(supabase, cachedData = null) {
+async function renderNewsListing(config, cachedData = null) {
   const container = document.getElementById('news-content');
   let posts = cachedData?.posts || [];
   if (!cachedData) {
-    const { data, error } = await supabase
-      .from('news_posts')
-      .select('id,title,slug,news_date,short_summary,cover_image_path,status')
-      .eq('status', 'published')
-      .order('news_date', { ascending: false });
-    if (error) throw error;
-    posts = data || [];
-    const imageUrls = await signedImages(supabase, NEWS_BUCKET, posts.map((post) => post.cover_image_path));
-    posts = posts.map((post) => ({ ...post, coverUrl: imageUrls[post.cover_image_path] || '' }));
+    posts = await queryTable(config, 'news_posts', {
+      select: 'id,title,slug,news_date,short_summary,cover_image_path,status',
+      status: 'eq.published',
+      order: 'news_date.desc',
+    });
+    posts = posts.map((post) => ({
+      ...post,
+      coverUrl: publicImageUrl(config, NEWS_BUCKET, post.cover_image_path),
+    }));
   }
   container.replaceChildren();
   if (!posts.length) {
@@ -287,8 +262,7 @@ function relatedLinks(title, items, collection) {
   return section;
 }
 
-async function renderProjectDetail(supabase, cachedData = null) {
-  const page = 'project-detail';
+async function renderProjectDetail(config, cachedData = null) {
   const container = document.getElementById('project-detail');
   const slug = contentSlug('projects');
   if (!slug) {
@@ -299,22 +273,13 @@ async function renderProjectDetail(supabase, cachedData = null) {
   let coverUrl = cachedData?.coverUrl || '';
   let galleryUrls = cachedData?.galleryUrls || [];
   if (!cachedData) {
-    const queryStartedAt = performance.now();
-    const result = await supabase
-      .from('projects')
-      .select('id,title,slug,short_summary,cover_image_path,overview_html,challenge_html,what_we_did_html,status,project_groups(name),project_tags(tags(name)),project_gallery_images(storage_path,sort_order),news_projects(news_posts(title,slug,news_date))')
-      .eq('slug', slug)
-      .eq('status', 'published')
-      .maybeSingle();
-    logTiming(page, 'main Supabase query', queryStartedAt, { rows: result.data ? 1 : 0 });
-    logTiming(page, 'tags/related-content queries', performance.now(), {
-      separateRequests: 0,
-      note: 'tags, gallery metadata, and related News are nested in the main query',
-      tags: result.data?.project_tags?.length || 0,
-      relatedItems: result.data?.news_projects?.length || 0,
+    const rows = await queryTable(config, 'projects', {
+      select: 'id,title,slug,short_summary,cover_image_path,overview_html,challenge_html,what_we_did_html,status,project_groups(name),project_tags(tags(name)),project_gallery_images(storage_path,sort_order),news_projects(news_posts(title,slug,news_date))',
+      slug: `eq.${slug}`,
+      status: 'eq.published',
+      limit: '1',
     });
-    if (result.error) throw result.error;
-    project = result.data;
+    project = rows[0] || null;
   }
   if (!project) {
     container.replaceChildren(emptyState('Project not found', 'This Project does not exist or is not published.'));
@@ -324,14 +289,9 @@ async function renderProjectDetail(supabase, cachedData = null) {
 
   const gallery = [...(project.project_gallery_images || [])].sort((a, b) => a.sort_order - b.sort_order);
   if (!cachedData) {
-    const imagePaths = [project.cover_image_path, ...gallery.map((image) => image.storage_path)];
-    const imagesStartedAt = performance.now();
-    const imageUrls = await signedImages(supabase, PROJECT_BUCKET, imagePaths);
-    logTiming(page, 'signed image URL fetching', imagesStartedAt, { images: Object.keys(imageUrls).length, requestMode: 'batch' });
-    coverUrl = imageUrls[project.cover_image_path] || '';
-    galleryUrls = gallery.map((image) => imageUrls[image.storage_path] || '');
+    coverUrl = publicImageUrl(config, PROJECT_BUCKET, project.cover_image_path);
+    galleryUrls = gallery.map((image) => publicImageUrl(config, PROJECT_BUCKET, image.storage_path));
   }
-  const renderStartedAt = performance.now();
   document.title = `${project.title} – Ripple Games`;
   container.replaceChildren(detailHeader(project.project_groups?.name || 'Project', project.title, project.short_summary));
   const tags = tagsNode(project.project_tags);
@@ -366,11 +326,10 @@ async function renderProjectDetail(supabase, cachedData = null) {
   const relatedNews = (project.news_projects || []).map((row) => row.news_posts).filter(Boolean);
   const related = relatedLinks('Related News', relatedNews, 'news');
   if (related) container.append(related);
-  logTiming(page, 'final render', renderStartedAt, { source: cachedData ? 'cache' : 'network' });
   return { project, coverUrl, galleryUrls };
 }
 
-async function renderNewsDetail(supabase, cachedData = null) {
+async function renderNewsDetail(config, cachedData = null) {
   const container = document.getElementById('news-detail');
   const slug = contentSlug('news');
   if (!slug) {
@@ -380,14 +339,13 @@ async function renderNewsDetail(supabase, cachedData = null) {
   let post = cachedData?.post || null;
   let coverUrl = cachedData?.coverUrl || '';
   if (!cachedData) {
-    const result = await supabase
-      .from('news_posts')
-      .select('id,title,slug,news_date,short_summary,cover_image_path,body_html,status,news_tags(tags(name)),news_projects(projects(title,slug))')
-      .eq('slug', slug)
-      .eq('status', 'published')
-      .maybeSingle();
-    if (result.error) throw result.error;
-    post = result.data;
+    const rows = await queryTable(config, 'news_posts', {
+      select: 'id,title,slug,news_date,short_summary,cover_image_path,body_html,status,news_tags(tags(name)),news_projects(projects(title,slug))',
+      slug: `eq.${slug}`,
+      status: 'eq.published',
+      limit: '1',
+    });
+    post = rows[0] || null;
   }
   if (!post) {
     container.replaceChildren(emptyState('News post not found', 'This News post does not exist or is not published.'));
@@ -396,8 +354,7 @@ async function renderNewsDetail(supabase, cachedData = null) {
   }
 
   if (!cachedData) {
-    const imageUrls = await signedImages(supabase, NEWS_BUCKET, [post.cover_image_path]);
-    coverUrl = imageUrls[post.cover_image_path] || '';
+    coverUrl = publicImageUrl(config, NEWS_BUCKET, post.cover_image_path);
   }
   document.title = `${post.title} – Ripple Games`;
   container.replaceChildren(detailHeader(formatDate(post.news_date), post.title, post.short_summary));
@@ -445,34 +402,30 @@ function validCachedData(page, data) {
   return false;
 }
 
-async function renderPage(page, supabase, cachedData = null) {
-  if (page === 'projects') return renderProjects(supabase, cachedData);
-  if (page === 'news') return renderNewsListing(supabase, cachedData);
-  if (page === 'project-detail') return renderProjectDetail(supabase, cachedData);
-  if (page === 'news-detail') return renderNewsDetail(supabase, cachedData);
+async function renderPage(page, config, cachedData = null) {
+  if (page === 'projects') return renderProjects(config, cachedData);
+  if (page === 'news') return renderNewsListing(config, cachedData);
+  if (page === 'project-detail') return renderProjectDetail(config, cachedData);
+  if (page === 'news-detail') return renderNewsDetail(config, cachedData);
   return null;
 }
 
 async function initialize() {
   const page = document.body.dataset.contentPage;
-  const initializedAt = performance.now();
   const container = document.querySelector('[data-content-root]');
   const cacheKey = pageCacheKey(page);
   const cachedData = readCache(cacheKey, CONTENT_CACHE_MAX_AGE);
   const hasCache = validCachedData(page, cachedData);
-  console.info(TIMING_PREFIX, { page, phase: 'content cache lookup', durationMs: 0, cacheHit: hasCache });
 
   if (hasCache) await renderPage(page, null, cachedData);
 
   try {
-    const supabase = await loadClient();
-    const freshData = await renderPage(page, supabase);
+    const config = await loadConfig();
+    const freshData = await renderPage(page, config);
     if (freshData && validCachedData(page, freshData)) writeCache(cacheKey, freshData);
     else removeCache(cacheKey);
-    logTiming(page, 'initialization/background refresh total', initializedAt, { cacheHit: hasCache });
   } catch (error) {
     console.error(error);
-    logTiming(page, 'initialization/background refresh total', initializedAt, { cacheHit: hasCache, failed: true });
     if (!hasCache && container) renderError(container);
   }
 }
