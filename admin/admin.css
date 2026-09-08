@@ -148,6 +148,9 @@ legend { padding: 0 8px; font-size: 1.15rem; font-weight: 750; }
 .preview-card__label { margin: 0; padding: 8px 10px; overflow: hidden; font-size: 0.8rem; text-overflow: ellipsis; white-space: nowrap; }
 .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .form-actions { margin-top: 18px; }
+.checkbox-list { display: grid; gap: 8px; margin-top: 14px; }
+.checkbox-list label { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 500; }
+.checkbox-list input { width: 18px; min-height: 18px; margin: 0; }
 
 @media (max-width: 700px) {
   .admin-shell { padding: 14px; }

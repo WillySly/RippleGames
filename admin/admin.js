@@ -1,10 +1,13 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 const STORAGE_BUCKET = 'project-images';
+const NEWS_STORAGE_BUCKET = 'news-images';
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']);
 const DRAFT_DATABASE = 'ripplegames-admin';
 const DRAFT_STORE = 'project-drafts';
+const NEWS_DRAFT_STORE = 'news-drafts';
+const ACTIVE_DRAFT_KEY = 'ripplegames-admin-active-draft';
 
 const views = {
   loading: document.getElementById('loading-view'),
@@ -12,6 +15,7 @@ const views = {
   dashboard: document.getElementById('dashboard-view'),
   groupForm: document.getElementById('group-form-view'),
   projectForm: document.getElementById('project-form-view'),
+  newsForm: document.getElementById('news-form-view'),
   unauthorized: document.getElementById('unauthorized-view'),
   configError: document.getElementById('config-error-view'),
 };
@@ -27,6 +31,8 @@ const elements = {
   groupCount: document.getElementById('group-count'),
   projectList: document.getElementById('project-list'),
   projectCount: document.getElementById('project-count'),
+  newsList: document.getElementById('news-list'),
+  newsCount: document.getElementById('news-count'),
   groupForm: document.getElementById('group-form'),
   groupFormTitle: document.getElementById('group-form-title'),
   groupFormMessage: document.getElementById('group-form-message'),
@@ -47,12 +53,26 @@ const elements = {
   galleryPreview: document.getElementById('gallery-preview'),
   tags: document.getElementById('project-tags'),
   statusNote: document.getElementById('project-status-note'),
+  newsForm: document.getElementById('news-form'),
+  newsFormTitle: document.getElementById('news-form-title'),
+  newsFormMessage: document.getElementById('news-form-message'),
+  newsTitle: document.getElementById('news-title'),
+  newsSlug: document.getElementById('news-slug'),
+  newsDate: document.getElementById('news-date'),
+  newsSummary: document.getElementById('news-summary'),
+  newsSummaryCount: document.getElementById('news-summary-count'),
+  newsCoverInput: document.getElementById('news-cover-image'),
+  newsCoverPreview: document.getElementById('news-cover-preview'),
+  newsTags: document.getElementById('news-tags'),
+  newsProjects: document.getElementById('news-projects'),
+  newsStatusNote: document.getElementById('news-status-note'),
   configErrorMessage: document.getElementById('config-error-message'),
 };
 
 const state = {
   groups: [],
   projects: [],
+  newsPosts: [],
   currentProject: null,
   coverSignedUrl: '',
   pendingCover: null,
@@ -62,6 +82,12 @@ const state = {
   pendingGallery: [],
   objectUrls: [],
   slugManuallyEdited: false,
+  currentNews: null,
+  newsCoverSignedUrl: '',
+  pendingNewsCover: null,
+  removeNewsCover: false,
+  newsObjectUrls: [],
+  newsSlugManuallyEdited: false,
   sessionVersion: 0,
   authorizedUserId: '',
 };
@@ -69,6 +95,7 @@ const state = {
 let supabase;
 let draftDatabasePromise;
 let draftSaveTimer;
+let newsDraftSaveTimer;
 
 function showOnly(viewName) {
   Object.entries(views).forEach(([name, element]) => {
@@ -102,10 +129,13 @@ function slugify(value) {
 function openDraftDatabase() {
   if (!draftDatabasePromise) {
     draftDatabasePromise = new Promise((resolve, reject) => {
-      const request = window.indexedDB.open(DRAFT_DATABASE, 1);
+      const request = window.indexedDB.open(DRAFT_DATABASE, 2);
       request.addEventListener('upgradeneeded', () => {
         if (!request.result.objectStoreNames.contains(DRAFT_STORE)) {
           request.result.createObjectStore(DRAFT_STORE);
+        }
+        if (!request.result.objectStoreNames.contains(NEWS_DRAFT_STORE)) {
+          request.result.createObjectStore(NEWS_DRAFT_STORE);
         }
       });
       request.addEventListener('success', () => resolve(request.result));
@@ -143,6 +173,9 @@ async function clearProjectDraft() {
       request.addEventListener('success', () => resolve());
       request.addEventListener('error', () => reject(request.error));
     });
+    if (window.localStorage.getItem(ACTIVE_DRAFT_KEY) === 'project') {
+      window.localStorage.removeItem(ACTIVE_DRAFT_KEY);
+    }
   } catch (error) {
     console.warn('The local Project draft could not be cleared.', error);
   }
@@ -172,6 +205,7 @@ async function persistProjectDraft() {
   if (!state.authorizedUserId || views.projectForm.hidden) return;
   try {
     await writeProjectDraft(state.authorizedUserId, captureProjectDraft());
+    window.localStorage.setItem(ACTIVE_DRAFT_KEY, 'project');
   } catch (error) {
     console.warn('The local Project draft could not be saved.', error);
   }
@@ -180,6 +214,74 @@ async function persistProjectDraft() {
 function scheduleProjectDraftSave() {
   window.clearTimeout(draftSaveTimer);
   draftSaveTimer = window.setTimeout(persistProjectDraft, 300);
+}
+
+async function readNewsDraft(userId) {
+  const database = await openDraftDatabase();
+  return new Promise((resolve, reject) => {
+    const request = database.transaction(NEWS_DRAFT_STORE, 'readonly').objectStore(NEWS_DRAFT_STORE).get(userId);
+    request.addEventListener('success', () => resolve(request.result || null));
+    request.addEventListener('error', () => reject(request.error));
+  });
+}
+
+async function writeNewsDraft(userId, draft) {
+  const database = await openDraftDatabase();
+  return new Promise((resolve, reject) => {
+    const request = database.transaction(NEWS_DRAFT_STORE, 'readwrite').objectStore(NEWS_DRAFT_STORE).put(draft, userId);
+    request.addEventListener('success', () => resolve());
+    request.addEventListener('error', () => reject(request.error));
+  });
+}
+
+async function clearNewsDraft() {
+  window.clearTimeout(newsDraftSaveTimer);
+  if (!state.authorizedUserId) return;
+  try {
+    const database = await openDraftDatabase();
+    await new Promise((resolve, reject) => {
+      const request = database.transaction(NEWS_DRAFT_STORE, 'readwrite').objectStore(NEWS_DRAFT_STORE).delete(state.authorizedUserId);
+      request.addEventListener('success', () => resolve());
+      request.addEventListener('error', () => reject(request.error));
+    });
+    if (window.localStorage.getItem(ACTIVE_DRAFT_KEY) === 'news') {
+      window.localStorage.removeItem(ACTIVE_DRAFT_KEY);
+    }
+  } catch (error) {
+    console.warn('The local News draft could not be cleared.', error);
+  }
+}
+
+function captureNewsDraft() {
+  return {
+    newsId: document.getElementById('news-id').value || null,
+    title: elements.newsTitle.value,
+    slug: elements.newsSlug.value,
+    newsDate: elements.newsDate.value,
+    shortSummary: elements.newsSummary.value,
+    bodyHtml: sanitizeRichText(document.getElementById('news-body-editor').innerHTML),
+    tags: elements.newsTags.value,
+    projectIds: [...elements.newsProjects.querySelectorAll('input:checked')].map((input) => input.value),
+    pendingCover: state.pendingNewsCover,
+    removeCover: state.removeNewsCover,
+    slugManuallyEdited: state.newsSlugManuallyEdited,
+    savedAt: new Date().toISOString(),
+  };
+}
+
+async function persistNewsDraft() {
+  if (!state.authorizedUserId || views.newsForm.hidden) return;
+  try {
+    await writeNewsDraft(state.authorizedUserId, captureNewsDraft());
+    window.localStorage.setItem(ACTIVE_DRAFT_KEY, 'news');
+  } catch (error) {
+    console.warn('The local News draft could not be saved.', error);
+  }
+}
+
+function scheduleNewsDraftSave() {
+  window.clearTimeout(newsDraftSaveTimer);
+  newsDraftSaveTimer = window.setTimeout(persistNewsDraft, 300);
 }
 
 function createButton(label, className, handler) {
@@ -236,7 +338,7 @@ async function handleSession(session) {
   }
 
   const preserveOpenView = state.authorizedUserId === session.user.id
-    && (!views.projectForm.hidden || !views.groupForm.hidden);
+    && (!views.projectForm.hidden || !views.groupForm.hidden || !views.newsForm.hidden);
   if (!preserveOpenView) showOnly('loading');
   const { data, error } = await supabase
     .from('admin_users')
@@ -261,7 +363,7 @@ async function handleSession(session) {
   if (preserveOpenView) return;
 
   await loadDashboard();
-  const restoredDraft = await restoreProjectDraft();
+  const restoredDraft = await restoreAdminDraft();
   if (!restoredDraft) showOnly('dashboard');
 }
 
@@ -287,18 +389,22 @@ async function initializeAdmin() {
 
 async function loadDashboard(successMessage = '') {
   setMessage(elements.dashboardMessage, 'Loading content…');
-  const [groupsResult, projectsResult] = await Promise.all([
+  const [groupsResult, projectsResult, newsResult] = await Promise.all([
     supabase.from('project_groups').select('*').order('name'),
     supabase
       .from('projects')
       .select('id,title,slug,status,project_group_id,cover_image_path,updated_at,project_groups(name)')
       .order('updated_at', { ascending: false }),
+    supabase
+      .from('news_posts')
+      .select('id,title,slug,news_date,status,cover_image_path,updated_at,news_projects(project_id)')
+      .order('news_date', { ascending: false }),
   ]);
 
-  if (groupsResult.error || projectsResult.error) {
+  if (groupsResult.error || projectsResult.error || newsResult.error) {
     setMessage(
       elements.dashboardMessage,
-      formatError(groupsResult.error || projectsResult.error, 'Content could not be loaded.'),
+      formatError(groupsResult.error || projectsResult.error || newsResult.error, 'Content could not be loaded.'),
       true,
     );
     return;
@@ -306,8 +412,10 @@ async function loadDashboard(successMessage = '') {
 
   state.groups = groupsResult.data || [];
   state.projects = projectsResult.data || [];
+  state.newsPosts = newsResult.data || [];
   renderGroups();
   renderProjects();
+  renderNews();
   setMessage(elements.dashboardMessage, successMessage);
 }
 
@@ -376,6 +484,48 @@ function renderProjects() {
     actionsCell.append(actions);
     row.append(titleCell, groupCell, statusCell, actionsCell);
     elements.projectList.append(row);
+  });
+}
+
+function renderNews() {
+  elements.newsList.replaceChildren();
+  elements.newsCount.textContent = String(state.newsPosts.length);
+  if (!state.newsPosts.length) {
+    elements.newsList.append(createEmptyRow('No News posts yet.', 5));
+    return;
+  }
+
+  state.newsPosts.forEach((post) => {
+    const row = document.createElement('tr');
+    const titleCell = document.createElement('td');
+    const title = document.createElement('strong');
+    title.textContent = post.title;
+    const slug = document.createElement('div');
+    slug.className = 'field-help';
+    slug.textContent = post.slug;
+    titleCell.append(title, slug);
+
+    const dateCell = document.createElement('td');
+    dateCell.textContent = post.news_date;
+    const projectsCell = document.createElement('td');
+    const linkedCount = post.news_projects?.length || 0;
+    projectsCell.textContent = linkedCount ? `${linkedCount} linked` : 'None';
+    const statusCell = document.createElement('td');
+    const status = document.createElement('span');
+    status.className = `status-badge status-badge--${post.status}`;
+    status.textContent = post.status;
+    statusCell.append(status);
+
+    const actionsCell = document.createElement('td');
+    const actions = document.createElement('div');
+    actions.className = 'row-actions';
+    actions.append(
+      createButton('Edit', 'button-secondary button-small', () => openNewsForm(post.id)),
+      createButton('Delete', 'button-danger button-small', () => deleteNews(post)),
+    );
+    actionsCell.append(actions);
+    row.append(titleCell, dateCell, projectsCell, statusCell, actionsCell);
+    elements.newsList.append(row);
   });
 }
 
@@ -471,9 +621,9 @@ function populateGroupSelect(selectedId = '') {
   });
 }
 
-async function signedUrl(path) {
+async function signedUrl(path, bucket = STORAGE_BUCKET) {
   if (!path) return '';
-  const { data, error } = await supabase.storage.from(STORAGE_BUCKET).createSignedUrl(path, 3600);
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
   if (error) throw error;
   return data.signedUrl;
 }
@@ -586,7 +736,15 @@ async function restoreProjectDraft() {
   renderCoverPreview();
   renderGalleryPreview();
   setMessage(elements.projectFormMessage, 'Unsaved local changes restored.');
+  window.localStorage.setItem(ACTIVE_DRAFT_KEY, 'project');
   return true;
+}
+
+async function restoreAdminDraft() {
+  const activeDraft = window.localStorage.getItem(ACTIVE_DRAFT_KEY);
+  if (activeDraft === 'news') return (await restoreNewsDraft()) || restoreProjectDraft();
+  if (activeDraft === 'project') return (await restoreProjectDraft()) || restoreNewsDraft();
+  return (await restoreProjectDraft()) || restoreNewsDraft();
 }
 
 function previewCard(src, label, removeHandler) {
@@ -655,10 +813,10 @@ function fileExtension(file) {
   return known[file.type];
 }
 
-async function uploadImage(projectId, area, file) {
+async function uploadImage(projectId, area, file, bucket = STORAGE_BUCKET) {
   validateImage(file);
   const path = `${projectId}/${area}/${crypto.randomUUID()}.${fileExtension(file)}`;
-  const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, {
+  const { error } = await supabase.storage.from(bucket).upload(path, file, {
     cacheControl: '3600',
     contentType: file.type,
     upsert: false,
@@ -820,6 +978,280 @@ async function deleteProject(project) {
   await loadDashboard('Project deleted.');
 }
 
+function localDateValue() {
+  const date = new Date();
+  const offset = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+}
+
+function resetNewsMediaState() {
+  state.newsObjectUrls.forEach(({ url }) => URL.revokeObjectURL(url));
+  state.newsObjectUrls = [];
+  state.newsCoverSignedUrl = '';
+  state.pendingNewsCover = null;
+  state.removeNewsCover = false;
+  elements.newsCoverInput.value = '';
+  elements.newsCoverPreview.replaceChildren();
+}
+
+function newsObjectUrl(file) {
+  const existing = state.newsObjectUrls.find((entry) => entry.file === file);
+  if (existing) return existing.url;
+  const url = URL.createObjectURL(file);
+  state.newsObjectUrls.push({ file, url });
+  return url;
+}
+
+function populateNewsProjects(selectedIds = []) {
+  const selected = new Set(selectedIds);
+  elements.newsProjects.replaceChildren();
+  if (!state.projects.length) {
+    const message = document.createElement('p');
+    message.className = 'field-help';
+    message.textContent = 'No Projects are available.';
+    elements.newsProjects.append(message);
+    return;
+  }
+
+  state.projects.forEach((project) => {
+    const label = document.createElement('label');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.name = 'project_ids';
+    checkbox.value = project.id;
+    checkbox.checked = selected.has(project.id);
+    const text = document.createElement('span');
+    text.textContent = project.title;
+    label.append(checkbox, text);
+    elements.newsProjects.append(label);
+  });
+}
+
+function renderNewsCoverPreview() {
+  elements.newsCoverPreview.replaceChildren();
+  if (state.pendingNewsCover) {
+    elements.newsCoverPreview.append(previewCard(newsObjectUrl(state.pendingNewsCover), state.pendingNewsCover.name, () => {
+      state.pendingNewsCover = null;
+      elements.newsCoverInput.value = '';
+      renderNewsCoverPreview();
+      scheduleNewsDraftSave();
+    }));
+    return;
+  }
+  if (state.currentNews?.cover_image_path && !state.removeNewsCover && state.newsCoverSignedUrl) {
+    elements.newsCoverPreview.append(previewCard(state.newsCoverSignedUrl, 'Current cover image', () => {
+      state.removeNewsCover = true;
+      renderNewsCoverPreview();
+      scheduleNewsDraftSave();
+    }));
+  }
+}
+
+function updateNewsCounters() {
+  elements.newsSummaryCount.textContent = String(elements.newsSummary.value.length);
+}
+
+async function openNewsForm(newsId = null, { persistDraft = true } = {}) {
+  elements.newsForm.reset();
+  resetNewsMediaState();
+  setMessage(elements.newsFormMessage);
+  state.currentNews = null;
+  state.newsSlugManuallyEdited = Boolean(newsId);
+  document.getElementById('news-body-editor').innerHTML = '';
+
+  if (!newsId) {
+    elements.newsFormTitle.textContent = 'New News Post';
+    elements.newsDate.value = localDateValue();
+    elements.newsStatusNote.textContent = 'Choose whether to save this News post as a draft or publish it.';
+    populateNewsProjects();
+    updateNewsCounters();
+    showOnly('newsForm');
+    elements.newsTitle.focus();
+    if (persistDraft) await persistNewsDraft();
+    return true;
+  }
+
+  showOnly('loading');
+  const [newsResult, tagsResult, projectsResult] = await Promise.all([
+    supabase.from('news_posts').select('*').eq('id', newsId).single(),
+    supabase.from('news_tags').select('tags(name)').eq('news_id', newsId),
+    supabase.from('news_projects').select('project_id').eq('news_id', newsId),
+  ]);
+  const error = newsResult.error || tagsResult.error || projectsResult.error;
+  if (error) {
+    showOnly('dashboard');
+    setMessage(elements.dashboardMessage, formatError(error, 'News post could not be loaded.'), true);
+    return false;
+  }
+
+  const post = newsResult.data;
+  state.currentNews = post;
+  elements.newsFormTitle.textContent = 'Edit News Post';
+  document.getElementById('news-id').value = post.id;
+  elements.newsTitle.value = post.title;
+  elements.newsSlug.value = post.slug;
+  elements.newsDate.value = post.news_date;
+  elements.newsSummary.value = post.short_summary || '';
+  document.getElementById('news-body-editor').innerHTML = sanitizeRichText(post.body_html || '');
+  elements.newsTags.value = (tagsResult.data || []).map((row) => row.tags?.name).filter(Boolean).join(', ');
+  populateNewsProjects((projectsResult.data || []).map((row) => row.project_id));
+  elements.newsStatusNote.textContent = `Current status: ${post.status}. Choose an action below.`;
+  updateNewsCounters();
+
+  try {
+    state.newsCoverSignedUrl = await signedUrl(post.cover_image_path, NEWS_STORAGE_BUCKET);
+  } catch (error) {
+    setMessage(elements.newsFormMessage, formatError(error, 'The cover image preview could not be loaded.'), true);
+  }
+  renderNewsCoverPreview();
+  showOnly('newsForm');
+  if (persistDraft) await persistNewsDraft();
+  return true;
+}
+
+async function restoreNewsDraft() {
+  let draft;
+  try {
+    draft = await readNewsDraft(state.authorizedUserId);
+  } catch (error) {
+    console.warn('The local News draft could not be read.', error);
+    return false;
+  }
+  if (!draft) return false;
+
+  const opened = await openNewsForm(draft.newsId, { persistDraft: false });
+  if (!opened) {
+    await clearNewsDraft();
+    return false;
+  }
+  elements.newsTitle.value = draft.title || '';
+  elements.newsSlug.value = draft.slug || '';
+  elements.newsDate.value = draft.newsDate || localDateValue();
+  elements.newsSummary.value = draft.shortSummary || '';
+  document.getElementById('news-body-editor').innerHTML = sanitizeRichText(draft.bodyHtml || '');
+  elements.newsTags.value = draft.tags || '';
+  populateNewsProjects(Array.isArray(draft.projectIds) ? draft.projectIds : []);
+  state.pendingNewsCover = draft.pendingCover || null;
+  state.removeNewsCover = Boolean(draft.removeCover);
+  state.newsSlugManuallyEdited = Boolean(draft.slugManuallyEdited);
+  updateNewsCounters();
+  renderNewsCoverPreview();
+  setMessage(elements.newsFormMessage, 'Unsaved local changes restored.');
+  window.localStorage.setItem(ACTIVE_DRAFT_KEY, 'news');
+  return true;
+}
+
+async function saveNewsTags(newsId, tagValues) {
+  const { error: deleteError } = await supabase.from('news_tags').delete().eq('news_id', newsId);
+  if (deleteError) throw deleteError;
+  if (!tagValues.length) return;
+
+  const { data: tags, error: tagError } = await supabase
+    .from('tags')
+    .upsert(tagValues, { onConflict: 'slug' })
+    .select('id');
+  if (tagError) throw tagError;
+  const { error: joinError } = await supabase
+    .from('news_tags')
+    .insert(tags.map((tag) => ({ news_id: newsId, tag_id: tag.id })));
+  if (joinError) throw joinError;
+}
+
+async function saveNewsProjects(newsId, projectIds) {
+  const { error: deleteError } = await supabase.from('news_projects').delete().eq('news_id', newsId);
+  if (deleteError) throw deleteError;
+  if (!projectIds.length) return;
+  const { error: insertError } = await supabase
+    .from('news_projects')
+    .insert(projectIds.map((projectId) => ({ news_id: newsId, project_id: projectId })));
+  if (insertError) throw insertError;
+}
+
+async function saveNews(event) {
+  event.preventDefault();
+  const requestedStatus = event.submitter?.dataset.newsStatus;
+  if (!requestedStatus) return;
+  setMessage(elements.newsFormMessage);
+
+  const submitButtons = elements.newsForm.querySelectorAll('button[type="submit"]');
+  submitButtons.forEach((button) => { button.disabled = true; });
+  const formData = new FormData(elements.newsForm);
+  const existingId = String(formData.get('id') || '');
+  const newsId = existingId || crypto.randomUUID();
+  const oldCoverPath = state.currentNews?.cover_image_path || '';
+  const values = {
+    id: newsId,
+    title: String(formData.get('title') || '').trim(),
+    slug: slugify(String(formData.get('slug') || '')),
+    news_date: String(formData.get('news_date') || ''),
+    cover_image_path: state.removeNewsCover && !state.pendingNewsCover ? null : oldCoverPath || null,
+    short_summary: String(formData.get('short_summary') || '').trim(),
+    body_html: sanitizeRichText(document.getElementById('news-body-editor').innerHTML),
+    status: requestedStatus,
+  };
+  elements.newsSlug.value = values.slug;
+
+  try {
+    if (!values.title || !values.slug || !values.news_date) {
+      throw new Error('Title, slug, and date are required.');
+    }
+    const saveResult = existingId
+      ? await supabase.from('news_posts').update(values).eq('id', newsId).select().single()
+      : await supabase.from('news_posts').insert(values).select().single();
+    if (saveResult.error) throw saveResult.error;
+    state.currentNews = saveResult.data;
+    document.getElementById('news-id').value = newsId;
+
+    await saveNewsTags(newsId, normalizedTags(String(formData.get('tags') || '')));
+    await saveNewsProjects(newsId, formData.getAll('project_ids').map(String));
+
+    if (state.pendingNewsCover) {
+      const newCoverPath = await uploadImage(newsId, 'cover', state.pendingNewsCover, NEWS_STORAGE_BUCKET);
+      const { error } = await supabase.from('news_posts').update({ cover_image_path: newCoverPath }).eq('id', newsId);
+      if (error) {
+        await supabase.storage.from(NEWS_STORAGE_BUCKET).remove([newCoverPath]);
+        throw error;
+      }
+      state.currentNews.cover_image_path = newCoverPath;
+      state.pendingNewsCover = null;
+      if (oldCoverPath) await supabase.storage.from(NEWS_STORAGE_BUCKET).remove([oldCoverPath]);
+    } else if (state.removeNewsCover && oldCoverPath) {
+      const { error } = await supabase.storage.from(NEWS_STORAGE_BUCKET).remove([oldCoverPath]);
+      if (error) throw error;
+      state.currentNews.cover_image_path = null;
+    }
+
+    await clearNewsDraft();
+    resetNewsMediaState();
+    showOnly('dashboard');
+    await loadDashboard(requestedStatus === 'published' ? 'News post published.' : 'News post saved as Draft.');
+  } catch (error) {
+    await persistNewsDraft();
+    setMessage(elements.newsFormMessage, formatError(error, 'News post could not be saved.'), true);
+  } finally {
+    submitButtons.forEach((button) => { button.disabled = false; });
+  }
+}
+
+async function deleteNews(post) {
+  if (!window.confirm(`Delete the News post “${post.title}”? This also removes its cover image.`)) return;
+  setMessage(elements.dashboardMessage, 'Deleting News post…');
+  const { error: deleteError } = await supabase.from('news_posts').delete().eq('id', post.id);
+  if (deleteError) {
+    setMessage(elements.dashboardMessage, formatError(deleteError, 'News post could not be deleted.'), true);
+    return;
+  }
+  if (post.cover_image_path) {
+    const { error: storageError } = await supabase.storage.from(NEWS_STORAGE_BUCKET).remove([post.cover_image_path]);
+    if (storageError) {
+      await loadDashboard('News post deleted, but its stored cover image could not be removed.');
+      setMessage(elements.dashboardMessage, 'News post deleted, but its stored cover image could not be removed.', true);
+      return;
+    }
+  }
+  await loadDashboard('News post deleted.');
+}
+
 function sanitizeRichText(html) {
   const template = document.createElement('template');
   template.innerHTML = html;
@@ -913,16 +1345,21 @@ elements.loginForm.addEventListener('submit', async (event) => {
 elements.logoutButtons.forEach((button) => button.addEventListener('click', logout));
 document.getElementById('new-group-button').addEventListener('click', () => openGroupForm());
 document.getElementById('new-project-button').addEventListener('click', () => openProjectForm());
+document.getElementById('new-news-button').addEventListener('click', () => openNewsForm());
 document.querySelectorAll('[data-cancel-form]').forEach((button) => {
   button.addEventListener('click', async () => {
     if (button.hasAttribute('data-discard-project')) await clearProjectDraft();
+    if (button.hasAttribute('data-discard-news')) await clearNewsDraft();
     resetProjectMediaState();
+    resetNewsMediaState();
     showOnly('dashboard');
   });
 });
 elements.groupForm.addEventListener('submit', saveGroup);
 elements.projectForm.addEventListener('submit', saveProject);
+elements.newsForm.addEventListener('submit', saveNews);
 elements.projectForm.addEventListener('input', scheduleProjectDraftSave);
+elements.newsForm.addEventListener('input', scheduleNewsDraftSave);
 elements.groupDescription.addEventListener('input', () => {
   elements.groupDescriptionCount.textContent = String(elements.groupDescription.value.length);
 });
@@ -942,6 +1379,23 @@ elements.projectSlug.addEventListener('input', () => {
 });
 elements.projectSlug.addEventListener('blur', () => {
   elements.projectSlug.value = slugify(elements.projectSlug.value);
+});
+elements.newsSummary.addEventListener('input', updateNewsCounters);
+elements.newsTitle.addEventListener('input', () => {
+  if (!state.newsSlugManuallyEdited) elements.newsSlug.value = slugify(elements.newsTitle.value);
+});
+elements.newsSlug.addEventListener('input', () => {
+  state.newsSlugManuallyEdited = true;
+  elements.newsSlug.value = elements.newsSlug.value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-{2,}/g, '-');
+});
+elements.newsSlug.addEventListener('blur', () => {
+  elements.newsSlug.value = slugify(elements.newsSlug.value);
 });
 elements.coverInput.addEventListener('change', () => {
   try {
@@ -970,6 +1424,21 @@ elements.galleryInput.addEventListener('change', () => {
   } catch (error) {
     elements.galleryInput.value = '';
     setMessage(elements.projectFormMessage, error.message, true);
+  }
+});
+elements.newsCoverInput.addEventListener('change', () => {
+  try {
+    const file = elements.newsCoverInput.files[0];
+    if (!file) return;
+    validateImage(file);
+    state.pendingNewsCover = file;
+    state.removeNewsCover = false;
+    renderNewsCoverPreview();
+    setMessage(elements.newsFormMessage);
+    scheduleNewsDraftSave();
+  } catch (error) {
+    elements.newsCoverInput.value = '';
+    setMessage(elements.newsFormMessage, error.message, true);
   }
 });
 

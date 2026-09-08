@@ -44,6 +44,7 @@
       <div class="primary-actions">
         <button id="new-group-button" type="button">+ New Project Group</button>
         <button id="new-project-button" type="button">+ New Project</button>
+        <button id="new-news-button" type="button">+ New News Post</button>
       </div>
 
       <section class="content-panel" aria-labelledby="groups-heading">
@@ -71,6 +72,24 @@
               <tr><th>Project</th><th>Project Group</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr>
             </thead>
             <tbody id="project-list"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="content-panel" aria-labelledby="news-heading">
+        <div class="section-heading">
+          <div>
+            <h2 id="news-heading">News</h2>
+            <p>Draft and published News posts.</p>
+          </div>
+          <span class="count-badge" id="news-count">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>News post</th><th>Date</th><th>Projects</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr>
+            </thead>
+            <tbody id="news-list"></tbody>
           </table>
         </div>
       </section>
@@ -190,6 +209,84 @@
             <button class="button-secondary" type="submit" data-project-status="draft">Save as Draft</button>
             <button type="submit" data-project-status="published">Publish</button>
             <button class="button-secondary" data-cancel-form data-discard-project type="button">Discard changes</button>
+          </div>
+        </fieldset>
+      </form>
+    </section>
+
+    <section class="admin-card admin-card--form" id="news-form-view" hidden>
+      <header class="form-header">
+        <div>
+          <p class="admin-eyebrow">News</p>
+          <h1 id="news-form-title">New News Post</h1>
+        </div>
+        <button class="button-secondary" data-cancel-form data-discard-news type="button">Discard changes</button>
+      </header>
+
+      <form id="news-form">
+        <input id="news-id" name="id" type="hidden" />
+
+        <fieldset>
+          <legend>Basic information</legend>
+          <div class="field-grid">
+            <div class="field field--wide">
+              <label for="news-title">Title</label>
+              <input id="news-title" name="title" type="text" maxlength="200" required />
+            </div>
+            <div class="field">
+              <label for="news-slug">Slug</label>
+              <input id="news-slug" name="slug" type="text" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required />
+              <p class="field-help">Auto-generated from the title; edit if needed.</p>
+            </div>
+            <div class="field">
+              <label for="news-date">Date</label>
+              <input id="news-date" name="news_date" type="date" required />
+            </div>
+            <div class="field field--wide">
+              <label for="news-summary">Short summary</label>
+              <textarea id="news-summary" name="short_summary" maxlength="1000" rows="4"></textarea>
+              <p class="field-help"><span id="news-summary-count">0</span>/1000 characters</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Cover image</legend>
+          <label for="news-cover-image">Upload image</label>
+          <input id="news-cover-image" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" />
+          <p class="field-help">JPEG, PNG, WebP, GIF, or AVIF. Maximum 10 MB.</p>
+          <div class="image-preview image-preview--cover" id="news-cover-preview"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Main body</legend>
+          <div class="rich-editor" data-editor="news-body-editor">
+            <div class="rich-toolbar" aria-label="News body formatting"></div>
+            <div class="rich-content" id="news-body-editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Main body"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Tags</legend>
+          <label for="news-tags">Tags</label>
+          <input id="news-tags" name="tags" type="text" placeholder="Game, Education, Event" />
+          <p class="field-help">Separate tags with commas.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Related Projects</legend>
+          <p class="field-help">Link this post to any number of existing Projects.</p>
+          <div class="checkbox-list" id="news-projects"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Publishing</legend>
+          <p id="news-status-note">Choose whether to save this News post as a draft or publish it.</p>
+          <p class="admin-message admin-message--error" id="news-form-message" role="alert" hidden></p>
+          <div class="form-actions">
+            <button class="button-secondary" type="submit" data-news-status="draft">Save as Draft</button>
+            <button type="submit" data-news-status="published">Publish</button>
+            <button class="button-secondary" data-cancel-form data-discard-news type="button">Discard changes</button>
           </div>
         </fieldset>
       </form>
