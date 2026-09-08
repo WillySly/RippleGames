@@ -2,6 +2,36 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const PROJECT_BUCKET = 'project-images';
 const NEWS_BUCKET = 'news-images';
+const CACHE_PREFIX = 'ripplegames-public-content-v1:';
+const CONFIG_CACHE_KEY = `${CACHE_PREFIX}config`;
+const CONTENT_CACHE_MAX_AGE = 30 * 60 * 1000;
+const CONFIG_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
+
+function readCache(key, maxAge) {
+  try {
+    const cached = JSON.parse(window.localStorage.getItem(key));
+    if (!cached || Date.now() - cached.savedAt > maxAge) return null;
+    return cached.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(key, data) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), data }));
+  } catch {
+    // Content still works when storage is unavailable or full.
+  }
+}
+
+function removeCache(key) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Ignore unavailable storage.
+  }
+}
 
 function element(tag, className = '', text = '') {
   const node = document.createElement(tag);
@@ -75,23 +105,27 @@ function richTextNode(html) {
 }
 
 async function loadClient() {
-  const response = await fetch('/api/admin-config', {
-    headers: { Accept: 'application/json' },
-    cache: 'no-store',
-  });
-  if (!response.ok) throw new Error('Supabase is not configured.');
-  const config = await response.json();
+  let config = readCache(CONFIG_CACHE_KEY, CONFIG_CACHE_MAX_AGE);
+  if (!config) {
+    const response = await fetch('/api/admin-config', {
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) throw new Error('Supabase is not configured.');
+    config = await response.json();
+    writeCache(CONFIG_CACHE_KEY, config);
+  }
   if (!config.supabaseUrl || !config.supabasePublishableKey) throw new Error('Supabase is not configured.');
   return createClient(config.supabaseUrl, config.supabasePublishableKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 }
 
-async function signedImage(supabase, bucket, path) {
-  if (!path) return '';
-  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
-  if (error) return '';
-  return data.signedUrl;
+async function signedImages(supabase, bucket, paths) {
+  const uniquePaths = [...new Set(paths.filter(Boolean))];
+  if (!uniquePaths.length) return {};
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrls(uniquePaths, 3600);
+  if (error) return {};
+  return Object.fromEntries((data || []).filter((item) => item.signedUrl).map((item) => [item.path, item.signedUrl]));
 }
 
 function listingCard(item, type, href, imageUrl = '') {
@@ -108,29 +142,33 @@ function listingCard(item, type, href, imageUrl = '') {
   return card;
 }
 
-async function renderProjects(supabase) {
+async function renderProjects(supabase, cachedData = null) {
   const container = document.getElementById('projects-content');
-  const [groupsResult, projectsResult] = await Promise.all([
-    supabase.from('project_groups').select('id,name,short_description').order('name'),
-    supabase
+  let groups = cachedData?.groups || [];
+  let projects = cachedData?.projects || [];
+  if (!cachedData) {
+    const projectsResult = await supabase
       .from('projects')
-      .select('id,title,slug,short_summary,cover_image_path,project_group_id')
+      .select('id,title,slug,short_summary,cover_image_path,project_group_id,status,project_groups(id,name,short_description)')
       .eq('status', 'published')
-      .order('title'),
-  ]);
-  if (groupsResult.error || projectsResult.error) throw groupsResult.error || projectsResult.error;
-
-  const projects = await Promise.all((projectsResult.data || []).map(async (project) => ({
-    ...project,
-    coverUrl: await signedImage(supabase, PROJECT_BUCKET, project.cover_image_path),
-  })));
+      .order('title');
+    if (projectsResult.error) throw projectsResult.error;
+    projects = projectsResult.data || [];
+    groups = [...new Map(projects
+      .map((project) => project.project_groups)
+      .filter(Boolean)
+      .map((group) => [group.id, group])).values()]
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const imageUrls = await signedImages(supabase, PROJECT_BUCKET, projects.map((project) => project.cover_image_path));
+    projects = projects.map((project) => ({ ...project, coverUrl: imageUrls[project.cover_image_path] || '' }));
+  }
   container.replaceChildren();
   if (!projects.length) {
     container.append(emptyState('No published projects yet', 'Published Projects will appear here.'));
-    return;
+    return { groups, projects };
   }
 
-  (groupsResult.data || []).forEach((group) => {
+  groups.forEach((group) => {
     const groupProjects = projects.filter((project) => project.project_group_id === group.id);
     if (!groupProjects.length) return;
     const section = element('section', 'content-section');
@@ -148,24 +186,27 @@ async function renderProjects(supabase) {
     section.append(groupNode);
     container.append(section);
   });
+  return { groups, projects };
 }
 
-async function renderNewsListing(supabase) {
+async function renderNewsListing(supabase, cachedData = null) {
   const container = document.getElementById('news-content');
-  const { data, error } = await supabase
-    .from('news_posts')
-    .select('id,title,slug,news_date,short_summary,cover_image_path')
-    .eq('status', 'published')
-    .order('news_date', { ascending: false });
-  if (error) throw error;
-  const posts = await Promise.all((data || []).map(async (post) => ({
-    ...post,
-    coverUrl: await signedImage(supabase, NEWS_BUCKET, post.cover_image_path),
-  })));
+  let posts = cachedData?.posts || [];
+  if (!cachedData) {
+    const { data, error } = await supabase
+      .from('news_posts')
+      .select('id,title,slug,news_date,short_summary,cover_image_path,status')
+      .eq('status', 'published')
+      .order('news_date', { ascending: false });
+    if (error) throw error;
+    posts = data || [];
+    const imageUrls = await signedImages(supabase, NEWS_BUCKET, posts.map((post) => post.cover_image_path));
+    posts = posts.map((post) => ({ ...post, coverUrl: imageUrls[post.cover_image_path] || '' }));
+  }
   container.replaceChildren();
   if (!posts.length) {
     container.append(emptyState('No published news yet', 'Published News posts will appear here.'));
-    return;
+    return { posts };
   }
   const section = element('section', 'content-section');
   const grid = element('div', 'content-grid');
@@ -174,6 +215,7 @@ async function renderNewsListing(supabase) {
   });
   section.append(grid);
   container.append(section);
+  return { posts };
 }
 
 function contentSlug(collection) {
@@ -214,32 +256,39 @@ function relatedLinks(title, items, collection) {
   return section;
 }
 
-async function renderProjectDetail(supabase) {
+async function renderProjectDetail(supabase, cachedData = null) {
   const container = document.getElementById('project-detail');
   const slug = contentSlug('projects');
   if (!slug) {
     container.replaceChildren(emptyState('Project not found', 'Return to the Projects page to browse published work.'));
     return;
   }
-  const { data: project, error } = await supabase
-    .from('projects')
-    .select('id,title,slug,short_summary,cover_image_path,overview_html,challenge_html,what_we_did_html,project_groups(name),project_tags(tags(name)),project_gallery_images(storage_path,sort_order)')
-    .eq('slug', slug)
-    .eq('status', 'published')
-    .maybeSingle();
-  if (error) throw error;
+  let project = cachedData?.project || null;
+  let coverUrl = cachedData?.coverUrl || '';
+  let galleryUrls = cachedData?.galleryUrls || [];
+  if (!cachedData) {
+    const result = await supabase
+      .from('projects')
+      .select('id,title,slug,short_summary,cover_image_path,overview_html,challenge_html,what_we_did_html,status,project_groups(name),project_tags(tags(name)),project_gallery_images(storage_path,sort_order),news_projects(news_posts(title,slug,news_date))')
+      .eq('slug', slug)
+      .eq('status', 'published')
+      .maybeSingle();
+    if (result.error) throw result.error;
+    project = result.data;
+  }
   if (!project) {
     container.replaceChildren(emptyState('Project not found', 'This Project does not exist or is not published.'));
     document.title = 'Project not found – Ripple Games';
-    return;
+    return null;
   }
 
   const gallery = [...(project.project_gallery_images || [])].sort((a, b) => a.sort_order - b.sort_order);
-  const [coverUrl, galleryUrls, relatedResult] = await Promise.all([
-    signedImage(supabase, PROJECT_BUCKET, project.cover_image_path),
-    Promise.all(gallery.map((image) => signedImage(supabase, PROJECT_BUCKET, image.storage_path))),
-    supabase.from('news_projects').select('news_posts(title,slug,news_date)').eq('project_id', project.id),
-  ]);
+  if (!cachedData) {
+    const imagePaths = [project.cover_image_path, ...gallery.map((image) => image.storage_path)];
+    const imageUrls = await signedImages(supabase, PROJECT_BUCKET, imagePaths);
+    coverUrl = imageUrls[project.cover_image_path] || '';
+    galleryUrls = gallery.map((image) => imageUrls[image.storage_path] || '');
+  }
   document.title = `${project.title} – Ripple Games`;
   container.replaceChildren(detailHeader(project.project_groups?.name || 'Project', project.title, project.short_summary));
   const tags = tagsNode(project.project_tags);
@@ -271,32 +320,41 @@ async function renderProjectDetail(supabase) {
     section.append(grid);
     container.append(section);
   }
-  const relatedNews = (relatedResult.data || []).map((row) => row.news_posts).filter(Boolean);
+  const relatedNews = (project.news_projects || []).map((row) => row.news_posts).filter(Boolean);
   const related = relatedLinks('Related News', relatedNews, 'news');
   if (related) container.append(related);
+  return { project, coverUrl, galleryUrls };
 }
 
-async function renderNewsDetail(supabase) {
+async function renderNewsDetail(supabase, cachedData = null) {
   const container = document.getElementById('news-detail');
   const slug = contentSlug('news');
   if (!slug) {
     container.replaceChildren(emptyState('News post not found', 'Return to the News page to browse published posts.'));
     return;
   }
-  const { data: post, error } = await supabase
-    .from('news_posts')
-    .select('id,title,slug,news_date,short_summary,cover_image_path,body_html,news_tags(tags(name)),news_projects(projects(title,slug))')
-    .eq('slug', slug)
-    .eq('status', 'published')
-    .maybeSingle();
-  if (error) throw error;
+  let post = cachedData?.post || null;
+  let coverUrl = cachedData?.coverUrl || '';
+  if (!cachedData) {
+    const result = await supabase
+      .from('news_posts')
+      .select('id,title,slug,news_date,short_summary,cover_image_path,body_html,status,news_tags(tags(name)),news_projects(projects(title,slug))')
+      .eq('slug', slug)
+      .eq('status', 'published')
+      .maybeSingle();
+    if (result.error) throw result.error;
+    post = result.data;
+  }
   if (!post) {
     container.replaceChildren(emptyState('News post not found', 'This News post does not exist or is not published.'));
     document.title = 'News post not found – Ripple Games';
-    return;
+    return null;
   }
 
-  const coverUrl = await signedImage(supabase, NEWS_BUCKET, post.cover_image_path);
+  if (!cachedData) {
+    const imageUrls = await signedImages(supabase, NEWS_BUCKET, [post.cover_image_path]);
+    coverUrl = imageUrls[post.cover_image_path] || '';
+  }
   document.title = `${post.title} – Ripple Games`;
   container.replaceChildren(detailHeader(formatDate(post.news_date), post.title, post.short_summary));
   const tags = tagsNode(post.news_tags);
@@ -315,20 +373,59 @@ async function renderNewsDetail(supabase) {
   const projects = (post.news_projects || []).map((row) => row.projects).filter(Boolean);
   const related = relatedLinks('Related Projects', projects, 'projects');
   if (related) container.append(related);
+  return { post, coverUrl };
+}
+
+function pageCacheKey(page) {
+  if (page === 'project-detail') return `${CACHE_PREFIX}project:${contentSlug('projects')}`;
+  if (page === 'news-detail') return `${CACHE_PREFIX}news-post:${contentSlug('news')}`;
+  return `${CACHE_PREFIX}${page}`;
+}
+
+function validCachedData(page, data) {
+  if (!data || typeof data !== 'object') return false;
+  if (page === 'projects') {
+    return Array.isArray(data.groups)
+      && Array.isArray(data.projects)
+      && data.projects.every((project) => project?.status === 'published');
+  }
+  if (page === 'news') {
+    return Array.isArray(data.posts) && data.posts.every((post) => post?.status === 'published');
+  }
+  if (page === 'project-detail') {
+    return data.project?.status === 'published' && data.project.slug === contentSlug('projects');
+  }
+  if (page === 'news-detail') {
+    return data.post?.status === 'published' && data.post.slug === contentSlug('news');
+  }
+  return false;
+}
+
+async function renderPage(page, supabase, cachedData = null) {
+  if (page === 'projects') return renderProjects(supabase, cachedData);
+  if (page === 'news') return renderNewsListing(supabase, cachedData);
+  if (page === 'project-detail') return renderProjectDetail(supabase, cachedData);
+  if (page === 'news-detail') return renderNewsDetail(supabase, cachedData);
+  return null;
 }
 
 async function initialize() {
   const page = document.body.dataset.contentPage;
   const container = document.querySelector('[data-content-root]');
+  const cacheKey = pageCacheKey(page);
+  const cachedData = readCache(cacheKey, CONTENT_CACHE_MAX_AGE);
+  const hasCache = validCachedData(page, cachedData);
+
+  if (hasCache) await renderPage(page, null, cachedData);
+
   try {
     const supabase = await loadClient();
-    if (page === 'projects') await renderProjects(supabase);
-    if (page === 'news') await renderNewsListing(supabase);
-    if (page === 'project-detail') await renderProjectDetail(supabase);
-    if (page === 'news-detail') await renderNewsDetail(supabase);
+    const freshData = await renderPage(page, supabase);
+    if (freshData && validCachedData(page, freshData)) writeCache(cacheKey, freshData);
+    else removeCache(cacheKey);
   } catch (error) {
     console.error(error);
-    if (container) renderError(container);
+    if (!hasCache && container) renderError(container);
   }
 }
 
