@@ -66,6 +66,7 @@ const elements = {
   galleryInput: document.getElementById('gallery-images'),
   galleryPreview: document.getElementById('gallery-preview'),
   tags: document.getElementById('project-tags'),
+  projectGames: document.getElementById('project-games'),
   statusNote: document.getElementById('project-status-note'),
   newsForm: document.getElementById('news-form'),
   newsFormTitle: document.getElementById('news-form-title'),
@@ -79,6 +80,7 @@ const elements = {
   newsCoverPreview: document.getElementById('news-cover-preview'),
   newsTags: document.getElementById('news-tags'),
   newsProjects: document.getElementById('news-projects'),
+  newsGames: document.getElementById('news-games'),
   newsStatusNote: document.getElementById('news-status-note'),
   configErrorMessage: document.getElementById('config-error-message'),
 };
@@ -213,6 +215,7 @@ function captureProjectDraft() {
     challengeHtml: sanitizeRichText(document.getElementById('challenge-editor').innerHTML),
     whatWeDidHtml: sanitizeRichText(document.getElementById('work-editor').innerHTML),
     tags: elements.tags.value,
+    gameIds: [...elements.projectGames.querySelectorAll('input:checked')].map((input) => input.value),
     pendingCover: state.pendingCover,
     removeCover: state.removeCover,
     pendingGallery: state.pendingGallery,
@@ -283,6 +286,7 @@ function captureNewsDraft() {
     bodyHtml: sanitizeRichText(document.getElementById('news-body-editor').innerHTML),
     tags: elements.newsTags.value,
     projectIds: [...elements.newsProjects.querySelectorAll('input:checked')].map((input) => input.value),
+    gameIds: [...elements.newsGames.querySelectorAll('input:checked')].map((input) => input.value),
     pendingCover: state.pendingNewsCover,
     removeCover: state.removeNewsCover,
     slugManuallyEdited: state.newsSlugManuallyEdited,
@@ -865,6 +869,31 @@ function populateGroupSelect(selectedId = '') {
   });
 }
 
+function populateGameSelector(container, inputName, selectedIds = []) {
+  const selected = new Set(selectedIds);
+  container.replaceChildren();
+  if (!state.games.length) {
+    const message = document.createElement('p');
+    message.className = 'field-help';
+    message.textContent = 'No Games are available. Create a Game in the registry first.';
+    container.append(message);
+    return;
+  }
+
+  state.games.forEach((game) => {
+    const label = document.createElement('label');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.name = inputName;
+    checkbox.value = game.id;
+    checkbox.checked = selected.has(game.id);
+    const text = document.createElement('span');
+    text.textContent = game.is_active ? game.title : `${game.title} (inactive)`;
+    label.append(checkbox, text);
+    container.append(label);
+  });
+}
+
 async function signedUrl(path, bucket = STORAGE_BUCKET) {
   if (!path) return '';
   const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
@@ -891,6 +920,7 @@ async function openProjectForm(projectId = null, { persistDraft = true } = {}) {
     elements.projectFormTitle.textContent = 'New Project';
     elements.statusNote.textContent = 'Choose whether to save this project as a draft or publish it.';
     populateGroupSelect();
+    populateGameSelector(elements.projectGames, 'game_ids');
     updateProjectCounters();
     showOnly('projectForm');
     elements.projectTitle.focus();
@@ -899,13 +929,14 @@ async function openProjectForm(projectId = null, { persistDraft = true } = {}) {
   }
 
   showOnly('loading');
-  const [projectResult, tagsResult, galleryResult] = await Promise.all([
+  const [projectResult, tagsResult, galleryResult, gamesResult] = await Promise.all([
     supabase.from('projects').select('*').eq('id', projectId).single(),
     supabase.from('project_tags').select('tags(name)').eq('project_id', projectId),
     supabase.from('project_gallery_images').select('*').eq('project_id', projectId).order('sort_order'),
+    supabase.from('project_games').select('game_id').eq('project_id', projectId),
   ]);
 
-  const error = projectResult.error || tagsResult.error || galleryResult.error;
+  const error = projectResult.error || tagsResult.error || galleryResult.error || gamesResult.error;
   if (error) {
     showOnly('dashboard');
     setMessage(elements.dashboardMessage, formatError(error, 'Project could not be loaded.'), true);
@@ -925,6 +956,7 @@ async function openProjectForm(projectId = null, { persistDraft = true } = {}) {
   document.getElementById('challenge-editor').innerHTML = sanitizeRichText(project.challenge_html || '');
   document.getElementById('work-editor').innerHTML = sanitizeRichText(project.what_we_did_html || '');
   elements.tags.value = (tagsResult.data || []).map((row) => row.tags?.name).filter(Boolean).join(', ');
+  populateGameSelector(elements.projectGames, 'game_ids', (gamesResult.data || []).map((row) => row.game_id));
   elements.statusNote.textContent = `Current status: ${project.status}. Choose an action below.`;
   updateProjectCounters();
 
@@ -970,6 +1002,7 @@ async function restoreProjectDraft() {
   document.getElementById('challenge-editor').innerHTML = sanitizeRichText(draft.challengeHtml || '');
   document.getElementById('work-editor').innerHTML = sanitizeRichText(draft.whatWeDidHtml || '');
   elements.tags.value = draft.tags || '';
+  populateGameSelector(elements.projectGames, 'game_ids', Array.isArray(draft.gameIds) ? draft.gameIds : []);
   state.pendingCover = draft.pendingCover || null;
   state.removeCover = Boolean(draft.removeCover);
   state.pendingGallery = Array.isArray(draft.pendingGallery) ? draft.pendingGallery : [];
@@ -1096,6 +1129,16 @@ async function saveProjectTags(projectId, tagValues) {
   if (joinError) throw joinError;
 }
 
+async function saveLinkedGames(table, foreignKey, contentId, gameIds) {
+  const { error: deleteError } = await supabase.from(table).delete().eq(foreignKey, contentId);
+  if (deleteError) throw deleteError;
+  if (!gameIds.length) return;
+  const { error: insertError } = await supabase
+    .from(table)
+    .insert(gameIds.map((gameId) => ({ [foreignKey]: contentId, game_id: gameId })));
+  if (insertError) throw insertError;
+}
+
 async function saveProject(event) {
   event.preventDefault();
   const requestedStatus = event.submitter?.dataset.projectStatus;
@@ -1135,6 +1178,7 @@ async function saveProject(event) {
     state.currentProject = saveResult.data;
 
     await saveProjectTags(projectId, normalizedTags(String(formData.get('tags') || '')));
+    await saveLinkedGames('project_games', 'project_id', projectId, formData.getAll('game_ids').map(String));
 
     if (state.pendingCover) {
       const newCoverPath = await uploadImage(projectId, 'cover', state.pendingCover);
@@ -1308,6 +1352,7 @@ async function openNewsForm(newsId = null, { persistDraft = true } = {}) {
     elements.newsDate.value = localDateValue();
     elements.newsStatusNote.textContent = 'Choose whether to save this News post as a draft or publish it.';
     populateNewsProjects();
+    populateGameSelector(elements.newsGames, 'game_ids');
     updateNewsCounters();
     showOnly('newsForm');
     elements.newsTitle.focus();
@@ -1316,12 +1361,13 @@ async function openNewsForm(newsId = null, { persistDraft = true } = {}) {
   }
 
   showOnly('loading');
-  const [newsResult, tagsResult, projectsResult] = await Promise.all([
+  const [newsResult, tagsResult, projectsResult, gamesResult] = await Promise.all([
     supabase.from('news_posts').select('*').eq('id', newsId).single(),
     supabase.from('news_tags').select('tags(name)').eq('news_id', newsId),
     supabase.from('news_projects').select('project_id').eq('news_id', newsId),
+    supabase.from('news_games').select('game_id').eq('news_id', newsId),
   ]);
-  const error = newsResult.error || tagsResult.error || projectsResult.error;
+  const error = newsResult.error || tagsResult.error || projectsResult.error || gamesResult.error;
   if (error) {
     showOnly('dashboard');
     setMessage(elements.dashboardMessage, formatError(error, 'News post could not be loaded.'), true);
@@ -1339,6 +1385,7 @@ async function openNewsForm(newsId = null, { persistDraft = true } = {}) {
   document.getElementById('news-body-editor').innerHTML = sanitizeRichText(post.body_html || '');
   elements.newsTags.value = (tagsResult.data || []).map((row) => row.tags?.name).filter(Boolean).join(', ');
   populateNewsProjects((projectsResult.data || []).map((row) => row.project_id));
+  populateGameSelector(elements.newsGames, 'game_ids', (gamesResult.data || []).map((row) => row.game_id));
   elements.newsStatusNote.textContent = `Current status: ${post.status}. Choose an action below.`;
   updateNewsCounters();
 
@@ -1375,6 +1422,7 @@ async function restoreNewsDraft() {
   document.getElementById('news-body-editor').innerHTML = sanitizeRichText(draft.bodyHtml || '');
   elements.newsTags.value = draft.tags || '';
   populateNewsProjects(Array.isArray(draft.projectIds) ? draft.projectIds : []);
+  populateGameSelector(elements.newsGames, 'game_ids', Array.isArray(draft.gameIds) ? draft.gameIds : []);
   state.pendingNewsCover = draft.pendingCover || null;
   state.removeNewsCover = Boolean(draft.removeCover);
   state.newsSlugManuallyEdited = Boolean(draft.slugManuallyEdited);
@@ -1448,6 +1496,7 @@ async function saveNews(event) {
 
     await saveNewsTags(newsId, normalizedTags(String(formData.get('tags') || '')));
     await saveNewsProjects(newsId, formData.getAll('project_ids').map(String));
+    await saveLinkedGames('news_games', 'news_id', newsId, formData.getAll('game_ids').map(String));
 
     if (state.pendingNewsCover) {
       const newCoverPath = await uploadImage(newsId, 'cover', state.pendingNewsCover, NEWS_STORAGE_BUCKET);
