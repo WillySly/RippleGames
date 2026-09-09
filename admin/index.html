@@ -45,7 +45,26 @@
         <button id="new-group-button" type="button">+ New Project Group</button>
         <button id="new-project-button" type="button">+ New Project</button>
         <button id="new-news-button" type="button">+ New News Post</button>
+        <button id="new-game-button" type="button">+ New Game</button>
       </div>
+
+      <section class="content-panel" aria-labelledby="games-heading">
+        <div class="section-heading">
+          <div>
+            <h2 id="games-heading">Games</h2>
+            <p>Playable game destinations and their metadata.</p>
+          </div>
+          <span class="count-badge" id="game-count">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Game</th><th>Playable URL/route</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr>
+            </thead>
+            <tbody id="game-list"></tbody>
+          </table>
+        </div>
+      </section>
 
       <section class="content-panel" aria-labelledby="groups-heading">
         <div class="section-heading">
@@ -115,6 +134,65 @@
           <button type="submit" id="save-group-button">Save Project Group</button>
           <button class="button-secondary" data-cancel-form type="button">Cancel</button>
         </div>
+      </form>
+    </section>
+
+    <section class="admin-card admin-card--form" id="game-form-view" hidden>
+      <header class="form-header">
+        <div>
+          <p class="admin-eyebrow">Games</p>
+          <h1 id="game-form-title">New Game</h1>
+        </div>
+        <button class="button-secondary" data-cancel-form data-discard-game type="button">Discard changes</button>
+      </header>
+
+      <form id="game-form">
+        <input id="game-id" name="id" type="hidden" />
+
+        <fieldset>
+          <legend>Game information</legend>
+          <div class="field-grid">
+            <div class="field field--wide">
+              <label for="game-title">Title</label>
+              <input id="game-title" name="title" type="text" maxlength="200" required />
+            </div>
+            <div class="field">
+              <label for="game-slug">Slug / internal identifier</label>
+              <input id="game-slug" name="slug" type="text" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required />
+              <p class="field-help">Auto-generated from the title; edit if needed.</p>
+            </div>
+            <div class="field">
+              <label for="game-playable-url">Playable URL or route</label>
+              <input id="game-playable-url" name="playable_url" type="text" maxlength="2048" placeholder="/game-chompo-calypse.html" required />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Cover/card image</legend>
+          <label for="game-cover-image">Upload image</label>
+          <input id="game-cover-image" name="cover_image" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" />
+          <p class="field-help">JPEG, PNG, WebP, GIF, or AVIF. Maximum 10 MB.</p>
+          <div class="image-preview image-preview--cover" id="game-cover-preview"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Tags</legend>
+          <label for="game-tags">Tags</label>
+          <input id="game-tags" name="tags" type="text" placeholder="Game, Education, Event" />
+          <p class="field-help">Separate tags with commas. Games reuse the existing CMS tags.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Availability</legend>
+          <p id="game-status-note">Choose whether to save this Game as inactive or make it active.</p>
+          <p class="admin-message admin-message--error" id="game-form-message" role="alert" hidden></p>
+          <div class="form-actions">
+            <button class="button-secondary" type="submit" data-game-active="false">Save as Inactive</button>
+            <button type="submit" data-game-active="true">Make Active</button>
+            <button class="button-secondary" data-cancel-form data-discard-game type="button">Discard changes</button>
+          </div>
+        </fieldset>
       </form>
     </section>
 

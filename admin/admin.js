@@ -2,6 +2,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const STORAGE_BUCKET = 'project-images';
 const NEWS_STORAGE_BUCKET = 'news-images';
+const GAME_STORAGE_BUCKET = 'game-images';
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']);
 const DRAFT_DATABASE = 'ripplegames-admin';
@@ -14,6 +15,7 @@ const views = {
   login: document.getElementById('login-view'),
   dashboard: document.getElementById('dashboard-view'),
   groupForm: document.getElementById('group-form-view'),
+  gameForm: document.getElementById('game-form-view'),
   projectForm: document.getElementById('project-form-view'),
   newsForm: document.getElementById('news-form-view'),
   unauthorized: document.getElementById('unauthorized-view'),
@@ -31,6 +33,8 @@ const elements = {
   groupCount: document.getElementById('group-count'),
   projectList: document.getElementById('project-list'),
   projectCount: document.getElementById('project-count'),
+  gameList: document.getElementById('game-list'),
+  gameCount: document.getElementById('game-count'),
   newsList: document.getElementById('news-list'),
   newsCount: document.getElementById('news-count'),
   groupForm: document.getElementById('group-form'),
@@ -39,6 +43,16 @@ const elements = {
   groupDescription: document.getElementById('group-description'),
   groupDescriptionCount: document.getElementById('group-description-count'),
   saveGroupButton: document.getElementById('save-group-button'),
+  gameForm: document.getElementById('game-form'),
+  gameFormTitle: document.getElementById('game-form-title'),
+  gameFormMessage: document.getElementById('game-form-message'),
+  gameTitle: document.getElementById('game-title'),
+  gameSlug: document.getElementById('game-slug'),
+  gamePlayableUrl: document.getElementById('game-playable-url'),
+  gameCoverInput: document.getElementById('game-cover-image'),
+  gameCoverPreview: document.getElementById('game-cover-preview'),
+  gameTags: document.getElementById('game-tags'),
+  gameStatusNote: document.getElementById('game-status-note'),
   projectForm: document.getElementById('project-form'),
   projectFormTitle: document.getElementById('project-form-title'),
   projectFormMessage: document.getElementById('project-form-message'),
@@ -71,6 +85,7 @@ const elements = {
 
 const state = {
   groups: [],
+  games: [],
   projects: [],
   newsPosts: [],
   currentProject: null,
@@ -88,6 +103,12 @@ const state = {
   removeNewsCover: false,
   newsObjectUrls: [],
   newsSlugManuallyEdited: false,
+  currentGame: null,
+  gameCoverSignedUrl: '',
+  pendingGameCover: null,
+  removeGameCover: false,
+  gameObjectUrls: [],
+  gameSlugManuallyEdited: false,
   sessionVersion: 0,
   authorizedUserId: '',
 };
@@ -338,7 +359,7 @@ async function handleSession(session) {
   }
 
   const preserveOpenView = state.authorizedUserId === session.user.id
-    && (!views.projectForm.hidden || !views.groupForm.hidden || !views.newsForm.hidden);
+    && (!views.projectForm.hidden || !views.groupForm.hidden || !views.newsForm.hidden || !views.gameForm.hidden);
   if (!preserveOpenView) showOnly('loading');
   const { data, error } = await supabase
     .from('admin_users')
@@ -389,7 +410,7 @@ async function initializeAdmin() {
 
 async function loadDashboard(successMessage = '') {
   setMessage(elements.dashboardMessage, 'Loading content…');
-  const [groupsResult, projectsResult, newsResult] = await Promise.all([
+  const [groupsResult, projectsResult, newsResult, gamesResult] = await Promise.all([
     supabase.from('project_groups').select('*').order('name'),
     supabase
       .from('projects')
@@ -399,12 +420,16 @@ async function loadDashboard(successMessage = '') {
       .from('news_posts')
       .select('id,title,slug,news_date,status,cover_image_path,updated_at,news_projects(project_id)')
       .order('news_date', { ascending: false }),
+    supabase
+      .from('games')
+      .select('id,title,slug,playable_url,is_active,cover_image_path,updated_at')
+      .order('updated_at', { ascending: false }),
   ]);
 
-  if (groupsResult.error || projectsResult.error || newsResult.error) {
+  if (groupsResult.error || projectsResult.error || newsResult.error || gamesResult.error) {
     setMessage(
       elements.dashboardMessage,
-      formatError(groupsResult.error || projectsResult.error || newsResult.error, 'Content could not be loaded.'),
+      formatError(groupsResult.error || projectsResult.error || newsResult.error || gamesResult.error, 'Content could not be loaded.'),
       true,
     );
     return;
@@ -413,7 +438,9 @@ async function loadDashboard(successMessage = '') {
   state.groups = groupsResult.data || [];
   state.projects = projectsResult.data || [];
   state.newsPosts = newsResult.data || [];
+  state.games = gamesResult.data || [];
   renderGroups();
+  renderGames();
   renderProjects();
   renderNews();
   setMessage(elements.dashboardMessage, successMessage);
@@ -445,6 +472,45 @@ function renderGroups() {
     );
     row.append(content, actions);
     elements.groupList.append(row);
+  });
+}
+
+function renderGames() {
+  elements.gameList.replaceChildren();
+  elements.gameCount.textContent = String(state.games.length);
+  if (!state.games.length) {
+    elements.gameList.append(createEmptyRow('No Games yet.', 4));
+    return;
+  }
+
+  state.games.forEach((game) => {
+    const row = document.createElement('tr');
+    const titleCell = document.createElement('td');
+    const title = document.createElement('strong');
+    title.textContent = game.title;
+    const slug = document.createElement('div');
+    slug.className = 'field-help';
+    slug.textContent = game.slug;
+    titleCell.append(title, slug);
+
+    const urlCell = document.createElement('td');
+    urlCell.textContent = game.playable_url;
+    const statusCell = document.createElement('td');
+    const status = document.createElement('span');
+    status.className = `status-badge status-badge--${game.is_active ? 'active' : 'inactive'}`;
+    status.textContent = game.is_active ? 'Active' : 'Inactive';
+    statusCell.append(status);
+
+    const actionsCell = document.createElement('td');
+    const actions = document.createElement('div');
+    actions.className = 'row-actions';
+    actions.append(
+      createButton('Edit', 'button-secondary button-small', () => openGameForm(game.id)),
+      createButton('Delete', 'button-danger button-small', () => deleteGame(game)),
+    );
+    actionsCell.append(actions);
+    row.append(titleCell, urlCell, statusCell, actionsCell);
+    elements.gameList.append(row);
   });
 }
 
@@ -577,6 +643,184 @@ async function deleteGroup(group) {
     return;
   }
   await loadDashboard('Project Group deleted.');
+}
+
+function resetGameMediaState() {
+  state.gameObjectUrls.forEach(({ url }) => URL.revokeObjectURL(url));
+  state.gameObjectUrls = [];
+  state.gameCoverSignedUrl = '';
+  state.pendingGameCover = null;
+  state.removeGameCover = false;
+  elements.gameCoverInput.value = '';
+  elements.gameCoverPreview.replaceChildren();
+}
+
+function gameObjectUrl(file) {
+  const existing = state.gameObjectUrls.find((entry) => entry.file === file);
+  if (existing) return existing.url;
+  const url = URL.createObjectURL(file);
+  state.gameObjectUrls.push({ file, url });
+  return url;
+}
+
+function renderGameCoverPreview() {
+  elements.gameCoverPreview.replaceChildren();
+  if (state.pendingGameCover) {
+    elements.gameCoverPreview.append(previewCard(gameObjectUrl(state.pendingGameCover), state.pendingGameCover.name, () => {
+      state.pendingGameCover = null;
+      elements.gameCoverInput.value = '';
+      renderGameCoverPreview();
+    }));
+    return;
+  }
+  if (state.currentGame?.cover_image_path && !state.removeGameCover && state.gameCoverSignedUrl) {
+    elements.gameCoverPreview.append(previewCard(state.gameCoverSignedUrl, 'Current cover image', () => {
+      state.removeGameCover = true;
+      renderGameCoverPreview();
+    }));
+  }
+}
+
+async function openGameForm(gameId = null) {
+  elements.gameForm.reset();
+  resetGameMediaState();
+  setMessage(elements.gameFormMessage);
+  state.currentGame = null;
+  state.gameSlugManuallyEdited = Boolean(gameId);
+
+  if (!gameId) {
+    elements.gameFormTitle.textContent = 'New Game';
+    elements.gameStatusNote.textContent = 'Choose whether to save this Game as inactive or make it active.';
+    showOnly('gameForm');
+    elements.gameTitle.focus();
+    return;
+  }
+
+  showOnly('loading');
+  const [gameResult, tagsResult] = await Promise.all([
+    supabase.from('games').select('*').eq('id', gameId).single(),
+    supabase.from('game_tags').select('tags(name)').eq('game_id', gameId),
+  ]);
+  const error = gameResult.error || tagsResult.error;
+  if (error) {
+    showOnly('dashboard');
+    setMessage(elements.dashboardMessage, formatError(error, 'Game could not be loaded.'), true);
+    return;
+  }
+
+  const game = gameResult.data;
+  state.currentGame = game;
+  elements.gameFormTitle.textContent = 'Edit Game';
+  document.getElementById('game-id').value = game.id;
+  elements.gameTitle.value = game.title;
+  elements.gameSlug.value = game.slug;
+  elements.gamePlayableUrl.value = game.playable_url;
+  elements.gameTags.value = (tagsResult.data || []).map((row) => row.tags?.name).filter(Boolean).join(', ');
+  elements.gameStatusNote.textContent = `Current status: ${game.is_active ? 'active' : 'inactive'}. Choose an action below.`;
+
+  try {
+    state.gameCoverSignedUrl = await signedUrl(game.cover_image_path, GAME_STORAGE_BUCKET);
+  } catch (error) {
+    setMessage(elements.gameFormMessage, formatError(error, 'The cover image preview could not be loaded.'), true);
+  }
+  renderGameCoverPreview();
+  showOnly('gameForm');
+}
+
+async function saveGameTags(gameId, tagValues) {
+  const { error: deleteError } = await supabase.from('game_tags').delete().eq('game_id', gameId);
+  if (deleteError) throw deleteError;
+  if (!tagValues.length) return;
+
+  const { data: tags, error: tagError } = await supabase
+    .from('tags')
+    .upsert(tagValues, { onConflict: 'slug' })
+    .select('id');
+  if (tagError) throw tagError;
+  const { error: joinError } = await supabase
+    .from('game_tags')
+    .insert(tags.map((tag) => ({ game_id: gameId, tag_id: tag.id })));
+  if (joinError) throw joinError;
+}
+
+async function saveGame(event) {
+  event.preventDefault();
+  const requestedActive = event.submitter?.dataset.gameActive;
+  if (requestedActive === undefined) return;
+  setMessage(elements.gameFormMessage);
+
+  const submitButtons = elements.gameForm.querySelectorAll('button[type="submit"]');
+  submitButtons.forEach((button) => { button.disabled = true; });
+  const formData = new FormData(elements.gameForm);
+  const existingId = String(formData.get('id') || '');
+  const gameId = existingId || crypto.randomUUID();
+  const oldCoverPath = state.currentGame?.cover_image_path || '';
+  const values = {
+    id: gameId,
+    title: String(formData.get('title') || '').trim(),
+    slug: slugify(String(formData.get('slug') || '')),
+    playable_url: String(formData.get('playable_url') || '').trim(),
+    cover_image_path: state.removeGameCover && !state.pendingGameCover ? null : oldCoverPath || null,
+    is_active: requestedActive === 'true',
+  };
+  elements.gameSlug.value = values.slug;
+
+  try {
+    if (!values.title || !values.slug || !values.playable_url) {
+      throw new Error('Title, slug, and playable URL/route are required.');
+    }
+    const saveResult = existingId
+      ? await supabase.from('games').update(values).eq('id', gameId).select().single()
+      : await supabase.from('games').insert(values).select().single();
+    if (saveResult.error) throw saveResult.error;
+    state.currentGame = saveResult.data;
+    document.getElementById('game-id').value = gameId;
+
+    await saveGameTags(gameId, normalizedTags(String(formData.get('tags') || '')));
+
+    if (state.pendingGameCover) {
+      const newCoverPath = await uploadImage(gameId, 'cover', state.pendingGameCover, GAME_STORAGE_BUCKET);
+      const { error } = await supabase.from('games').update({ cover_image_path: newCoverPath }).eq('id', gameId);
+      if (error) {
+        await supabase.storage.from(GAME_STORAGE_BUCKET).remove([newCoverPath]);
+        throw error;
+      }
+      state.currentGame.cover_image_path = newCoverPath;
+      state.pendingGameCover = null;
+      if (oldCoverPath) await supabase.storage.from(GAME_STORAGE_BUCKET).remove([oldCoverPath]);
+    } else if (state.removeGameCover && oldCoverPath) {
+      const { error } = await supabase.storage.from(GAME_STORAGE_BUCKET).remove([oldCoverPath]);
+      if (error) throw error;
+      state.currentGame.cover_image_path = null;
+    }
+
+    resetGameMediaState();
+    showOnly('dashboard');
+    await loadDashboard(values.is_active ? 'Game activated.' : 'Game saved as inactive.');
+  } catch (error) {
+    setMessage(elements.gameFormMessage, formatError(error, 'Game could not be saved.'), true);
+  } finally {
+    submitButtons.forEach((button) => { button.disabled = false; });
+  }
+}
+
+async function deleteGame(game) {
+  if (!window.confirm(`Delete the Game “${game.title}”? This also removes its cover image.`)) return;
+  setMessage(elements.dashboardMessage, 'Deleting Game…');
+  const { error: deleteError } = await supabase.from('games').delete().eq('id', game.id);
+  if (deleteError) {
+    setMessage(elements.dashboardMessage, formatError(deleteError, 'Game could not be deleted.'), true);
+    return;
+  }
+  if (game.cover_image_path) {
+    const { error: storageError } = await supabase.storage.from(GAME_STORAGE_BUCKET).remove([game.cover_image_path]);
+    if (storageError) {
+      await loadDashboard('Game deleted, but its stored cover image could not be removed.');
+      setMessage(elements.dashboardMessage, 'Game deleted, but its stored cover image could not be removed.', true);
+      return;
+    }
+  }
+  await loadDashboard('Game deleted.');
 }
 
 function cleanupObjectUrls() {
@@ -1346,16 +1590,19 @@ elements.logoutButtons.forEach((button) => button.addEventListener('click', logo
 document.getElementById('new-group-button').addEventListener('click', () => openGroupForm());
 document.getElementById('new-project-button').addEventListener('click', () => openProjectForm());
 document.getElementById('new-news-button').addEventListener('click', () => openNewsForm());
+document.getElementById('new-game-button').addEventListener('click', () => openGameForm());
 document.querySelectorAll('[data-cancel-form]').forEach((button) => {
   button.addEventListener('click', async () => {
     if (button.hasAttribute('data-discard-project')) await clearProjectDraft();
     if (button.hasAttribute('data-discard-news')) await clearNewsDraft();
     resetProjectMediaState();
     resetNewsMediaState();
+    resetGameMediaState();
     showOnly('dashboard');
   });
 });
 elements.groupForm.addEventListener('submit', saveGroup);
+elements.gameForm.addEventListener('submit', saveGame);
 elements.projectForm.addEventListener('submit', saveProject);
 elements.newsForm.addEventListener('submit', saveNews);
 elements.projectForm.addEventListener('input', scheduleProjectDraftSave);
@@ -1396,6 +1643,22 @@ elements.newsSlug.addEventListener('input', () => {
 });
 elements.newsSlug.addEventListener('blur', () => {
   elements.newsSlug.value = slugify(elements.newsSlug.value);
+});
+elements.gameTitle.addEventListener('input', () => {
+  if (!state.gameSlugManuallyEdited) elements.gameSlug.value = slugify(elements.gameTitle.value);
+});
+elements.gameSlug.addEventListener('input', () => {
+  state.gameSlugManuallyEdited = true;
+  elements.gameSlug.value = elements.gameSlug.value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-{2,}/g, '-');
+});
+elements.gameSlug.addEventListener('blur', () => {
+  elements.gameSlug.value = slugify(elements.gameSlug.value);
 });
 elements.coverInput.addEventListener('change', () => {
   try {
@@ -1439,6 +1702,20 @@ elements.newsCoverInput.addEventListener('change', () => {
   } catch (error) {
     elements.newsCoverInput.value = '';
     setMessage(elements.newsFormMessage, error.message, true);
+  }
+});
+elements.gameCoverInput.addEventListener('change', () => {
+  try {
+    const file = elements.gameCoverInput.files[0];
+    if (!file) return;
+    validateImage(file);
+    state.pendingGameCover = file;
+    state.removeGameCover = false;
+    renderGameCoverPreview();
+    setMessage(elements.gameFormMessage);
+  } catch (error) {
+    elements.gameCoverInput.value = '';
+    setMessage(elements.gameFormMessage, error.message, true);
   }
 });
 

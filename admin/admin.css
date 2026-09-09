@@ -112,7 +112,7 @@ button:disabled { cursor: wait; opacity: 0.65; }
 .count-badge, .status-badge { display: inline-block; border-radius: 999px; font-size: 0.78rem; font-weight: 750; white-space: nowrap; }
 .count-badge { min-width: 30px; padding: 5px 9px; background: #eee; text-align: center; }
 .status-badge { padding: 4px 9px; background: #eee; text-transform: capitalize; }
-.status-badge--published { background: #dff3e2; color: #205c29; }
+.status-badge--published, .status-badge--active { background: #dff3e2; color: #205c29; }
 
 .group-row, .empty-row { padding: 16px 0; border-top: 1px solid #e4e4e4; }
 .group-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
