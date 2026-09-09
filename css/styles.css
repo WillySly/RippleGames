@@ -902,7 +902,7 @@ body {
 }
 
 .listing-card {
-  --image-card-border: transparent;
+  --image-card-border: none;
   min-height: 300px;
 }
 
@@ -1124,7 +1124,7 @@ body {
 
 .image-card--compact {
     --image-card-radius: 28px;
-    --image-card-border: transparent;
+    --image-card-border: none;
     width: min(100%, 320px);
     min-height: 230px;
     align-self: start;
