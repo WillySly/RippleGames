@@ -868,8 +868,7 @@ body {
   flex-direction: column;
   justify-content: flex-end;
   overflow: hidden;
-  border: 1px solid var(--image-card-border);
-  border-radius: var(--image-card-radius);
+  border: none;
   background: #151515 center/cover no-repeat;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
@@ -1105,13 +1104,16 @@ body {
 
 .game-card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 24px;
     padding: 0 var(--gutter) 60px;
 }
 
 .game-card {
     --image-card-radius: 30px;
+    width: min(100%, 320px);
+    justify-self: start;
+    align-self: start;
     aspect-ratio: 16 / 10;
     cursor: pointer;
 }
