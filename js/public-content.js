@@ -453,17 +453,18 @@ async function renderNewsDetail(config, cachedData = null) {
 }
 
 function searchResultCard(item) {
-  const card = element('div', 'image-card game-card');
-  if (item.type === 'Project') card.classList.add('image-card--project', 'image-card--compact');
+  const card = element('div', 'image-card image-card--search');
   if (item.image) card.style.backgroundImage = `url("${item.image.replaceAll('"', '%22')}")`;
   if (item.link) {
-    card.style.cursor = 'pointer';
+    card.classList.add('image-card--linked');
     card.addEventListener('click', () => { window.location = item.link; });
   }
-  const content = element('div', 'image-card__content card-content');
-  if (item.type && item.type !== 'Project') content.append(element('span', 'listing-card__type', item.type));
-  content.append(element('h2', 'image-card__title card-title', item.title));
-  const tags = element('div', 'card-tags');
+  const overlay = element('span', 'image-card__overlay');
+  overlay.setAttribute('aria-hidden', 'true');
+  const content = element('div', 'image-card__content');
+  content.append(element('h2', 'image-card__title', item.title));
+  if (item.summary) content.append(element('p', 'image-card__description', item.summary));
+  const tags = element('div', 'image-card__tags card-tags');
   item.tags.forEach((tagName) => {
     const link = element('a');
     link.href = `/search.html?q=${encodeURIComponent(tagName)}`;
@@ -472,7 +473,7 @@ function searchResultCard(item) {
     tags.append(link);
   });
   content.append(tags);
-  card.append(content);
+  card.append(overlay, content);
   return card;
 }
 
@@ -489,12 +490,12 @@ async function renderSearch(config, cachedData = null) {
   if (!cachedData) {
     [projects, posts] = await Promise.all([
       queryTable(config, 'projects', {
-        select: 'id,title,slug,cover_image_path,status,project_tags(tags(name))',
+        select: 'id,title,slug,short_summary,cover_image_path,status,project_tags(tags(name))',
         status: 'eq.published',
         order: 'title.asc',
       }),
       queryTable(config, 'news_posts', {
-        select: 'id,title,slug,cover_image_path,status,news_tags(tags(name))',
+        select: 'id,title,slug,short_summary,cover_image_path,status,news_tags(tags(name))',
         status: 'eq.published',
         order: 'news_date.desc',
       }),
@@ -509,20 +510,20 @@ async function renderSearch(config, cachedData = null) {
     }));
   }
 
-  const games = (window.RIPPLE_GAMES_SEARCH_GAMES || []).map((game) => ({ ...game, type: '' }));
+  const games = window.RIPPLE_GAMES_SEARCH_GAMES || [];
   const projectResults = projects.map((project) => ({
     title: project.title,
+    summary: project.short_summary,
     image: project.image,
     link: `/projects/${encodeURIComponent(project.slug)}`,
     tags: (project.project_tags || []).map((row) => row.tags?.name).filter(Boolean),
-    type: 'Project',
   }));
   const newsResults = posts.map((post) => ({
     title: post.title,
+    summary: post.short_summary,
     image: post.image,
     link: `/news/${encodeURIComponent(post.slug)}`,
     tags: (post.news_tags || []).map((row) => row.tags?.name).filter(Boolean),
-    type: 'News',
   }));
   const matches = [...games, ...projectResults, ...newsResults].filter((item) =>
     item.tags.some((tag) => normalizeSearchValue(tag).includes(needle))

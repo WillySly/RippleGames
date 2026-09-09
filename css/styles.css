@@ -874,8 +874,8 @@ body {
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-.image-card::before {
-  content: '';
+.image-card::before,
+.image-card__overlay {
   position: absolute;
   z-index: 0;
   inset: -2px;
@@ -883,6 +883,10 @@ body {
   background: var(--image-card-gradient);
   pointer-events: none;
 }
+
+.image-card::before { content: ''; }
+
+.image-card--search::before { content: none; }
 
 .image-card:hover {
   transform: translateY(-3px);
@@ -1103,43 +1107,46 @@ body {
     font-family: 'FiraGo-Book', FiraGo, sans-serif;
 }
 
-.game-card-grid {
+.search-results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 320px));
+    justify-content: start;
     gap: 24px;
     padding: 0 var(--gutter) 60px;
 }
 
-.game-card {
-    --image-card-radius: 30px;
-    aspect-ratio: 16 / 10;
-    cursor: pointer;
-}
-
-@media (max-width: 500px) {
-    .game-card-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.image-card--compact {
+.image-card--search {
     --image-card-radius: 28px;
-    --image-card-border: none;
-    width: min(100%, 320px);
+    --image-card-gradient: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.42) 30%, rgba(0, 0, 0, 0.9) 72%, rgba(0, 0, 0, 0.98) 100%);
+    width: 100%;
     min-height: 230px;
-    align-self: start;
-    justify-self: start;
     aspect-ratio: 4 / 3;
 }
 
-.image-card--compact .image-card__content {
+.image-card--linked {
+    cursor: pointer;
+}
+
+.image-card--search .image-card__content {
     padding: 90px 18px 18px;
 }
 
-.image-card--compact .image-card__title {
+.image-card--search .image-card__title {
+    margin: 0 0 8px;
     color: #fff;
     font-size: clamp(1.3rem, 2vw, 1.9rem);
+    font-weight: 800;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.image-card--search .image-card__description {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 0 0 10px;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 .search-no-results {
