@@ -461,19 +461,10 @@ function searchResultCard(item) {
   }
   const overlay = element('span', 'image-card__overlay');
   overlay.setAttribute('aria-hidden', 'true');
+  const typeLabel = element('span', 'image-card__type', item.resultType);
   const content = element('div', 'image-card__content');
   content.append(element('h2', 'image-card__title', item.title));
-  if (item.summary) content.append(element('p', 'image-card__description', item.summary));
-  const tags = element('div', 'image-card__tags card-tags');
-  item.tags.forEach((tagName) => {
-    const link = element('a');
-    link.href = `/search.html?q=${encodeURIComponent(tagName)}`;
-    link.addEventListener('click', (event) => event.stopPropagation());
-    link.append(element('span', 'tag', `#${tagName.toUpperCase()}`));
-    tags.append(link);
-  });
-  content.append(tags);
-  card.append(overlay, content);
+  card.append(overlay, typeLabel, content);
   return card;
 }
 
@@ -490,12 +481,12 @@ async function renderSearch(config, cachedData = null) {
   if (!cachedData) {
     [projects, posts] = await Promise.all([
       queryTable(config, 'projects', {
-        select: 'id,title,slug,short_summary,cover_image_path,status,project_tags(tags(name))',
+        select: 'id,title,slug,cover_image_path,status,project_tags(tags(name))',
         status: 'eq.published',
         order: 'title.asc',
       }),
       queryTable(config, 'news_posts', {
-        select: 'id,title,slug,short_summary,cover_image_path,status,news_tags(tags(name))',
+        select: 'id,title,slug,cover_image_path,status,news_tags(tags(name))',
         status: 'eq.published',
         order: 'news_date.desc',
       }),
@@ -510,20 +501,23 @@ async function renderSearch(config, cachedData = null) {
     }));
   }
 
-  const games = window.RIPPLE_GAMES_SEARCH_GAMES || [];
+  const games = (window.RIPPLE_GAMES_SEARCH_GAMES || []).map((game) => ({
+    ...game,
+    resultType: 'GAME',
+  }));
   const projectResults = projects.map((project) => ({
     title: project.title,
-    summary: project.short_summary,
     image: project.image,
     link: `/projects/${encodeURIComponent(project.slug)}`,
     tags: (project.project_tags || []).map((row) => row.tags?.name).filter(Boolean),
+    resultType: 'PROJECT',
   }));
   const newsResults = posts.map((post) => ({
     title: post.title,
-    summary: post.short_summary,
     image: post.image,
     link: `/news/${encodeURIComponent(post.slug)}`,
     tags: (post.news_tags || []).map((row) => row.tags?.name).filter(Boolean),
+    resultType: 'NEWS',
   }));
   const matches = [...games, ...projectResults, ...newsResults].filter((item) =>
     item.tags.some((tag) => normalizeSearchValue(tag).includes(needle))

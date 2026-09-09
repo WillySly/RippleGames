@@ -1127,6 +1127,20 @@ body {
     cursor: pointer;
 }
 
+.image-card--search .image-card__type {
+    position: absolute;
+    z-index: 2;
+    top: 16px;
+    left: 16px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: #f9cc61;
+    color: #000;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
 .image-card--search .image-card__content {
     padding: 90px 18px 18px;
 }
@@ -1137,16 +1151,6 @@ body {
     font-size: clamp(1.3rem, 2vw, 1.9rem);
     font-weight: 800;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
-}
-
-.image-card--search .image-card__description {
-    display: -webkit-box;
-    overflow: hidden;
-    margin: 0 0 10px;
-    color: #fff;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
 }
 
 .search-no-results {
