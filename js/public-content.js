@@ -289,11 +289,10 @@ function playableGamesSection(games) {
     const card = element('a', 'image-card playable-game-card');
     card.href = safePlayableUrl(game.playable_url);
     if (game.coverUrl) card.style.backgroundImage = `url("${game.coverUrl.replaceAll('"', '%22')}")`;
-    const type = element('span', 'playable-game-card__type', 'PLAYABLE GAME');
     const action = element('span', 'playable-game-card__action', '▶ PLAY GAME');
     const body = element('div', 'image-card__content playable-game-card__content');
     body.append(element('h3', 'image-card__title playable-game-card__title', game.title));
-    card.append(type, action, body);
+    card.append(action, body);
     grid.append(card);
   });
   section.append(grid);
@@ -513,6 +512,7 @@ function searchResultCard(item) {
   const typeLabel = element('span', 'image-card__type', item.resultType);
   const content = element('div', 'image-card__content');
   content.append(element('h2', 'image-card__title', item.title));
+  if (item.summary) content.append(element('p', 'image-card__description', item.summary));
   card.append(overlay, typeLabel, content);
   return card;
 }
@@ -527,17 +527,23 @@ async function renderSearch(config, cachedData = null) {
 
   let projects = cachedData?.projects || [];
   let posts = cachedData?.posts || [];
+  let games = cachedData?.games || [];
   if (!cachedData) {
-    [projects, posts] = await Promise.all([
+    [projects, posts, games] = await Promise.all([
       queryTable(config, 'projects', {
-        select: 'id,title,slug,cover_image_path,status,project_tags(tags(name))',
+        select: 'id,title,slug,short_summary,cover_image_path,status,project_tags(tags(name))',
         status: 'eq.published',
         order: 'title.asc',
       }),
       queryTable(config, 'news_posts', {
-        select: 'id,title,slug,cover_image_path,status,news_tags(tags(name))',
+        select: 'id,title,slug,short_summary,cover_image_path,status,news_tags(tags(name))',
         status: 'eq.published',
         order: 'news_date.desc',
+      }),
+      queryTable(config, 'games', {
+        select: 'id,title,slug,cover_image_path,playable_url,is_active,game_tags(tags(name))',
+        is_active: 'eq.true',
+        order: 'title.asc',
       }),
     ]);
     projects = projects.map((project) => ({
@@ -548,14 +554,22 @@ async function renderSearch(config, cachedData = null) {
       ...post,
       image: publicImageUrl(config, NEWS_BUCKET, post.cover_image_path),
     }));
+    games = games.map((game) => ({
+      ...game,
+      image: publicImageUrl(config, GAME_BUCKET, game.cover_image_path),
+    }));
   }
 
-  const games = (window.RIPPLE_GAMES_SEARCH_GAMES || []).map((game) => ({
-    ...game,
+  const gameResults = games.map((game) => ({
+    title: game.title,
+    image: game.image,
+    link: safePlayableUrl(game.playable_url),
+    tags: (game.game_tags || []).map((row) => row.tags?.name).filter(Boolean),
     resultType: 'GAME',
   }));
   const projectResults = projects.map((project) => ({
     title: project.title,
+    summary: project.short_summary,
     image: project.image,
     link: `/projects/${encodeURIComponent(project.slug)}`,
     tags: (project.project_tags || []).map((row) => row.tags?.name).filter(Boolean),
@@ -563,18 +577,23 @@ async function renderSearch(config, cachedData = null) {
   }));
   const newsResults = posts.map((post) => ({
     title: post.title,
+    summary: post.short_summary,
     image: post.image,
     link: `/news/${encodeURIComponent(post.slug)}`,
     tags: (post.news_tags || []).map((row) => row.tags?.name).filter(Boolean),
     resultType: 'NEWS',
   }));
-  const matches = [...games, ...projectResults, ...newsResults].filter((item) =>
-    item.tags.some((tag) => normalizeSearchValue(tag).includes(needle))
-    || normalizeSearchValue(item.title).includes(needle));
+  const allResults = [...gameResults, ...projectResults, ...newsResults];
+  const matches = needle === 'game'
+    ? gameResults
+    : allResults.filter((item) =>
+      item.tags.some((tag) => normalizeSearchValue(tag).includes(needle))
+      || normalizeSearchValue(item.title).includes(needle)
+      || normalizeSearchValue(item.summary || '').includes(needle));
 
   grid.replaceChildren(...matches.map(searchResultCard));
   noResults.style.display = matches.length ? 'none' : '';
-  return { projects, posts };
+  return { projects, posts, games };
 }
 
 function pageCacheKey(page) {
@@ -602,8 +621,10 @@ function validCachedData(page, data) {
   if (page === 'search') {
     return Array.isArray(data.projects)
       && Array.isArray(data.posts)
+      && Array.isArray(data.games)
       && data.projects.every((project) => project?.status === 'published')
-      && data.posts.every((post) => post?.status === 'published');
+      && data.posts.every((post) => post?.status === 'published')
+      && data.games.every((game) => game?.is_active === true);
   }
   return false;
 }
@@ -625,7 +646,7 @@ async function initialize() {
   const hasCache = validCachedData(page, cachedData);
 
   if (hasCache) await renderPage(page, null, cachedData);
-  else if (page === 'search') await renderSearch(null, { projects: [], posts: [] });
+  else if (page === 'search') await renderSearch(null, { projects: [], posts: [], games: [] });
 
   try {
     const config = await loadConfig();

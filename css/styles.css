@@ -1003,7 +1003,6 @@ body {
   pointer-events: none;
 }
 
-.playable-game-card__type,
 .playable-game-card__action {
   position: absolute;
   z-index: 3;
@@ -1013,12 +1012,6 @@ body {
   color: #000;
   font-weight: 800;
   letter-spacing: 0.06em;
-}
-
-.playable-game-card__type {
-  top: 16px;
-  left: 16px;
-  font-size: 0.72rem;
 }
 
 .playable-game-card__action {
@@ -1228,6 +1221,15 @@ body {
     color: #fff;
     font-size: clamp(1.3rem, 2vw, 1.9rem);
     font-weight: 800;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.image-card--search .image-card__description {
+    margin: 0;
+    color: #fff;
+    font-family: 'FiraGo-Book', FiraGo, sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.4;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
 }
 
