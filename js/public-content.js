@@ -1,5 +1,6 @@
 const PROJECT_BUCKET = 'project-images';
 const NEWS_BUCKET = 'news-images';
+const GAME_BUCKET = 'game-images';
 const CACHE_PREFIX = 'ripplegames-public-content-v2:';
 const CONFIG_CACHE_KEY = `${CACHE_PREFIX}config`;
 const CONTENT_CACHE_MAX_AGE = 30 * 60 * 1000;
@@ -266,6 +267,39 @@ function relatedLinks(title, items, collection) {
   return section;
 }
 
+function safePlayableUrl(value) {
+  if (!value) return '';
+  try {
+    const url = new URL(value, window.location.origin);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
+function playableGamesSection(games) {
+  const playableGames = games.filter((game) => game?.title && safePlayableUrl(game.playable_url));
+  if (!playableGames.length) return null;
+
+  const section = element('section', 'content-section content-detail__section');
+  const heading = playableGames.length === 1 ? 'Play the Game' : 'Play the Games';
+  section.append(element('h2', 'content-section__heading', heading));
+  const grid = element('div', 'content-grid playable-games-grid');
+  playableGames.forEach((game) => {
+    const card = element('a', 'image-card playable-game-card');
+    card.href = safePlayableUrl(game.playable_url);
+    if (game.coverUrl) card.style.backgroundImage = `url("${game.coverUrl.replaceAll('"', '%22')}")`;
+    const type = element('span', 'playable-game-card__type', 'PLAYABLE GAME');
+    const action = element('span', 'playable-game-card__action', '▶ PLAY GAME');
+    const body = element('div', 'image-card__content playable-game-card__content');
+    body.append(element('h3', 'image-card__title playable-game-card__title', game.title));
+    card.append(type, action, body);
+    grid.append(card);
+  });
+  section.append(grid);
+  return section;
+}
+
 function galleryCarousel(urls, projectTitle) {
   const section = element('section', 'content-section content-detail__section');
   const header = element('div', 'gallery-heading');
@@ -358,9 +392,10 @@ async function renderProjectDetail(config, cachedData = null) {
   let project = cachedData?.project || null;
   let coverUrl = cachedData?.coverUrl || '';
   let galleryUrls = cachedData?.galleryUrls || [];
+  let linkedGames = cachedData?.linkedGames || [];
   if (!cachedData) {
     const rows = await queryTable(config, 'projects', {
-      select: 'id,title,slug,short_summary,cover_image_path,overview_html,challenge_html,what_we_did_html,status,project_groups(name),project_tags(tags(name)),project_gallery_images(storage_path,sort_order),news_projects(news_posts(title,slug,news_date))',
+      select: 'id,title,slug,short_summary,cover_image_path,overview_html,challenge_html,what_we_did_html,status,project_groups(name),project_tags(tags(name)),project_gallery_images(storage_path,sort_order),news_projects(news_posts(title,slug,news_date)),project_games(games(title,slug,cover_image_path,playable_url,is_active))',
       slug: `eq.${slug}`,
       status: 'eq.published',
       limit: '1',
@@ -377,6 +412,10 @@ async function renderProjectDetail(config, cachedData = null) {
   if (!cachedData) {
     coverUrl = publicImageUrl(config, PROJECT_BUCKET, project.cover_image_path);
     galleryUrls = gallery.map((image) => publicImageUrl(config, PROJECT_BUCKET, image.storage_path));
+    linkedGames = (project.project_games || [])
+      .map((row) => row.games)
+      .filter((game) => game?.is_active)
+      .map((game) => ({ ...game, coverUrl: publicImageUrl(config, GAME_BUCKET, game.cover_image_path) }));
   }
   document.title = `${project.title} – Ripple Games`;
   container.replaceChildren(detailHeader(project.project_groups?.name || 'Project', project.title, project.short_summary));
@@ -394,6 +433,9 @@ async function renderProjectDetail(config, cachedData = null) {
     contentSection('What We Did', project.what_we_did_html),
   ].filter(Boolean).forEach((section) => container.append(section));
 
+  const games = playableGamesSection(linkedGames);
+  if (games) container.append(games);
+
   const validGallery = galleryUrls.filter(Boolean);
   if (validGallery.length) {
     container.append(galleryCarousel(validGallery, project.title));
@@ -401,7 +443,7 @@ async function renderProjectDetail(config, cachedData = null) {
   const relatedNews = (project.news_projects || []).map((row) => row.news_posts).filter(Boolean);
   const related = relatedLinks('Related News', relatedNews, 'news');
   if (related) container.append(related);
-  return { project, coverUrl, galleryUrls };
+  return { project, coverUrl, galleryUrls, linkedGames };
 }
 
 async function renderNewsDetail(config, cachedData = null) {
@@ -413,9 +455,10 @@ async function renderNewsDetail(config, cachedData = null) {
   }
   let post = cachedData?.post || null;
   let coverUrl = cachedData?.coverUrl || '';
+  let linkedGames = cachedData?.linkedGames || [];
   if (!cachedData) {
     const rows = await queryTable(config, 'news_posts', {
-      select: 'id,title,slug,news_date,short_summary,cover_image_path,body_html,status,news_tags(tags(name)),news_projects(projects(title,slug))',
+      select: 'id,title,slug,news_date,short_summary,cover_image_path,body_html,status,news_tags(tags(name)),news_projects(projects(title,slug)),news_games(games(title,slug,cover_image_path,playable_url,is_active))',
       slug: `eq.${slug}`,
       status: 'eq.published',
       limit: '1',
@@ -430,6 +473,10 @@ async function renderNewsDetail(config, cachedData = null) {
 
   if (!cachedData) {
     coverUrl = publicImageUrl(config, NEWS_BUCKET, post.cover_image_path);
+    linkedGames = (post.news_games || [])
+      .map((row) => row.games)
+      .filter((game) => game?.is_active)
+      .map((game) => ({ ...game, coverUrl: publicImageUrl(config, GAME_BUCKET, game.cover_image_path) }));
   }
   document.title = `${post.title} – Ripple Games`;
   container.replaceChildren(detailHeader(formatDate(post.news_date), post.title, post.short_summary));
@@ -446,10 +493,12 @@ async function renderNewsDetail(config, cachedData = null) {
     section.append(richTextNode(post.body_html));
     container.append(section);
   }
+  const games = playableGamesSection(linkedGames);
+  if (games) container.append(games);
   const projects = (post.news_projects || []).map((row) => row.projects).filter(Boolean);
   const related = relatedLinks('Related Projects', projects, 'projects');
   if (related) container.append(related);
-  return { post, coverUrl };
+  return { post, coverUrl, linkedGames };
 }
 
 function searchResultCard(item) {

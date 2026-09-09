@@ -982,6 +982,84 @@ body {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
 }
 
+.playable-games-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 350px));
+  justify-content: start;
+}
+
+.playable-game-card {
+  --image-card-gradient: linear-gradient(to bottom, transparent 20%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0.96) 100%);
+  min-height: 260px;
+}
+
+.playable-game-card::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: -2px;
+  background: rgba(0, 0, 0, 0.68);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.playable-game-card__type,
+.playable-game-card__action {
+  position: absolute;
+  z-index: 3;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: #f9cc61;
+  color: #000;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.playable-game-card__type {
+  top: 16px;
+  left: 16px;
+  font-size: 0.72rem;
+}
+
+.playable-game-card__action {
+  top: 50%;
+  left: 50%;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  opacity: 0;
+  transform: translate(-50%, -42%) scale(0.92);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.playable-game-card__content {
+  z-index: 2;
+  padding: 90px 22px 22px;
+}
+
+.playable-game-card__title {
+  margin: 0;
+  color: #fff;
+  font: clamp(1.5rem, 3vw, 2.3rem)/1 'Barbu', sans-serif;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.playable-game-card:hover,
+.playable-game-card:focus-visible {
+  transform: translateY(-4px) scale(1.015);
+}
+
+.playable-game-card:hover::after,
+.playable-game-card:focus-visible::after {
+  opacity: 1;
+}
+
+.playable-game-card:hover .playable-game-card__action,
+.playable-game-card:focus-visible .playable-game-card__action {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
 .project-group__meta {
   margin: 0 0 8px;
   color: #f9cc61;
