@@ -300,13 +300,34 @@ body {
 .hero-description {
   font-size: clamp(1rem, 2vw, 1.25rem);
   color: var(--muted);
-  max-width: 660px;      /* keeps text in a nice column */
+  max-width: 720px;      /* keeps text in a nice column */
   text-align: center;    /* center the lines */
   margin-left: auto;     /* centers block horizontally */
   margin-right: auto;
   line-height: 1.6;      /* extra readability */
   font-family: 'FiraGo-Book', sans-serif; /* use your preferred font */
 
+}
+
+.hero-description p {
+  margin: 0 0 1rem;
+}
+
+.hero-description strong {
+  color: var(--fg);
+  font-family: 'FiraGo-Heavy', sans-serif;
+}
+
+.hero-description .hero-hook {
+  margin: 1.5rem 0 0;
+  color: #F9CC61;
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.hero-description .hero-hook strong {
+  color: inherit;
 }
 
 .hero-graphic {
