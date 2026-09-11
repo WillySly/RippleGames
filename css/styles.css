@@ -343,6 +343,18 @@ body {
   display: block; /* Removes any extra space below the image */
 }
 
+@media (max-width: 900px) {
+  .hero-section {
+    align-items: flex-start;
+    padding: 120px 20px 0;
+  }
+
+  .hero-title {
+    margin-top: 0;
+    padding-top: 0;
+  }
+}
+
 
 /* =========================
    CARD
@@ -683,10 +695,26 @@ body {
   .about {
     flex-direction: column;
     text-align: center;
-    padding: 40px 20px;
+    align-items: center;
+    min-height: 0;
+    padding: 24px 20px 300px;
   }
+
   .about__content {
-    max-width: 90%;
+    width: 100%;
+    max-width: 620px;
+  }
+
+  .about__title {
+    margin: 0 0 12px;
+  }
+
+  .about__content p {
+    margin: 0 0 12px;
+  }
+
+  .about__content p:last-child {
+    margin-bottom: 0;
   }
 }
 
