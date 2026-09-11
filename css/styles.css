@@ -1228,6 +1228,7 @@ body {
 
 .games-page__listing {
   padding-top: clamp(44px, 7vw, 76px);
+  border:none;
 }
 
 .games-page__grid {
