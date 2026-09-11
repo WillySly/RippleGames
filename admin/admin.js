@@ -1374,6 +1374,7 @@ function updateNewsCounters() {
 
 async function openNewsForm(newsId = null, { persistDraft = true } = {}) {
   elements.newsForm.reset();
+  document.getElementById('news-id').value = '';
   resetNewsMediaState();
   setMessage(elements.newsFormMessage);
   state.currentNews = null;
