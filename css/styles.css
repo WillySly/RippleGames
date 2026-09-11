@@ -651,7 +651,7 @@ body {
 .about {
   position: relative;
   width: 100%;
-  min-height: 60vh;
+  min-height: 70vh;
   display: flex;
   align-items: flex-start;
   background: url('../img/bg2.png') center/cover no-repeat;
@@ -666,14 +666,14 @@ body {
 .about__content {
   position: relative;
   z-index: 2;
-  max-width: 620px;
+  max-width: 560px;
 
 }
 
 .about__title {
   font-size: clamp(32px, 5vw, 56px);
   font-weight: 600;
-  margin: 10vh 0 20px;
+  margin: 6vh 0 20px;
 
   font-family: 'FiraGo-Heavy', sans-serif; /* use your preferred font */
 }
