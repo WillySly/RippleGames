@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" href="img/maria.png" type="image/png" sizes="32x32">
 </head>
-<body>
+<body data-content-page="games">
 <nav class="navbar" aria-label="Main navigation">
   <div class="navbar-container">
     <div class="navbar-logo">
@@ -40,23 +40,17 @@
 <main class="content-page">
   <header class="content-page__hero">
     <p class="content-page__eyebrow">Play with purpose</p>
-    <h1 class="content-page__title">Games</h1>
-    <p class="content-page__intro">Games that teach, raise awareness, and spark conversation. This collection will grow from projects tagged as games when the content system is introduced.</p>
+    <h1 class="content-page__title">Explore our games</h1>
+    <p class="content-page__intro">Different subjects. Different formats. Different ways to play.<br>Explore the games we’ve found along the way.</p>
   </header>
 
-  <section class="content-section" aria-labelledby="games-heading">
-    <h2 class="content-section__heading" id="games-heading">Explore our games</h2>
-    <div class="content-grid">
-      <a class="image-card listing-card" href="/game-chompo-calypse.html" style="background-image: url('img/game-cards/ChompocalypseCard.png')">
-        <div class="image-card__content listing-card__body">
-          <span class="listing-card__type">Digital game · Educational</span>
-          <h3 class="image-card__title listing-card__title">Chompo-Calypse</h3>
-          <p class="image-card__description listing-card__description">Defeat Chompo and save the city from the growing tide of e-waste.</p>
-        </div>
-      </a>
-    </div>
-  </section>
+  <div id="games-content" data-content-root>
+    <section class="content-section">
+      <div class="empty-state"><h2>Loading games…</h2></div>
+    </section>
+  </div>
 </main>
 <script src="js/navigation.js"></script>
+<script type="module" src="js/public-content.js"></script>
 </body>
 </html>

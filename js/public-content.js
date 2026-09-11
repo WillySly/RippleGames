@@ -330,6 +330,28 @@ function safePlayableUrl(value) {
   }
 }
 
+function playableGameCard(game, { modifiers = '', showTags = false } = {}) {
+  const card = element('a', `image-card playable-game-card ${modifiers}`.trim());
+  card.href = safePlayableUrl(game.playable_url);
+  if (game.coverUrl) card.style.backgroundImage = `url("${game.coverUrl.replaceAll('"', '%22')}")`;
+
+  const action = element('span', 'playable-game-card__action', '▶ PLAY GAME');
+  const body = element('div', 'image-card__content playable-game-card__content');
+  body.append(element('h3', 'image-card__title playable-game-card__title', game.title));
+
+  if (showTags) {
+    const tagNames = (game.game_tags || []).map((row) => row.tags?.name).filter(Boolean);
+    if (tagNames.length) {
+      const tags = element('div', 'card-tags playable-game-card__tags');
+      tagNames.forEach((name) => tags.append(element('span', 'tag', `#${name}`)));
+      body.append(tags);
+    }
+  }
+
+  card.append(action, body);
+  return card;
+}
+
 function playableGamesSection(games) {
   const playableGames = games.filter((game) => game?.title && safePlayableUrl(game.playable_url));
   if (!playableGames.length) return null;
@@ -339,17 +361,42 @@ function playableGamesSection(games) {
   section.append(element('h2', 'content-section__heading', heading));
   const grid = element('div', 'content-grid playable-games-grid');
   playableGames.forEach((game) => {
-    const card = element('a', 'image-card playable-game-card');
-    card.href = safePlayableUrl(game.playable_url);
-    if (game.coverUrl) card.style.backgroundImage = `url("${game.coverUrl.replaceAll('"', '%22')}")`;
-    const action = element('span', 'playable-game-card__action', '▶ PLAY GAME');
-    const body = element('div', 'image-card__content playable-game-card__content');
-    body.append(element('h3', 'image-card__title playable-game-card__title', game.title));
-    card.append(action, body);
-    grid.append(card);
+    grid.append(playableGameCard(game));
   });
   section.append(grid);
   return section;
+}
+
+async function renderGames(config, cachedData = null) {
+  const container = document.getElementById('games-content');
+  let games = cachedData?.games || [];
+  if (!cachedData) {
+    games = await queryTable(config, 'games', {
+      select: 'id,title,slug,cover_image_path,playable_url,is_active,game_tags(tags(name))',
+      is_active: 'eq.true',
+      order: 'title.asc',
+    });
+    games = games.map((game) => ({
+      ...game,
+      coverUrl: publicImageUrl(config, GAME_BUCKET, game.cover_image_path),
+    }));
+  }
+
+  const playableGames = games.filter((game) => game?.title && safePlayableUrl(game.playable_url));
+  container.replaceChildren();
+  if (!playableGames.length) {
+    container.append(emptyState('No active games yet', 'Published games will appear here.'));
+    return { games };
+  }
+
+  const section = element('section', 'content-section games-page__listing');
+  const grid = element('div', 'content-grid playable-games-grid games-page__grid');
+  playableGames.forEach((game) => {
+    grid.append(playableGameCard(game, { modifiers: 'playable-game-card--large', showTags: true }));
+  });
+  section.append(grid);
+  container.append(section);
+  return { games };
 }
 
 function galleryCarousel(urls, projectTitle) {
@@ -667,6 +714,9 @@ function validCachedData(page, data) {
       && data.posts.length <= 3
       && data.posts.every((post) => post?.status === 'published');
   }
+  if (page === 'games') {
+    return Array.isArray(data.games) && data.games.every((game) => game?.is_active === true);
+  }
   if (page === 'news') {
     return Array.isArray(data.posts) && data.posts.every((post) => post?.status === 'published');
   }
@@ -689,6 +739,7 @@ function validCachedData(page, data) {
 
 async function renderPage(page, config, cachedData = null) {
   if (page === 'home') return renderHomepageNews(config, cachedData);
+  if (page === 'games') return renderGames(config, cachedData);
   if (page === 'projects') return renderProjects(config, cachedData);
   if (page === 'news') return renderNewsListing(config, cachedData);
   if (page === 'project-detail') return renderProjectDetail(config, cachedData);

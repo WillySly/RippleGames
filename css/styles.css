@@ -1226,6 +1226,49 @@ body {
   transform: translate(-50%, -50%) scale(1);
 }
 
+.games-page__listing {
+  padding-top: clamp(44px, 7vw, 76px);
+}
+
+.games-page__grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+  gap: clamp(26px, 4vw, 42px);
+}
+
+.playable-game-card--large {
+  min-height: clamp(360px, 42vw, 500px);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+}
+
+.playable-game-card--large .playable-game-card__content {
+  padding: clamp(150px, 26vw, 300px) clamp(24px, 3vw, 36px) clamp(26px, 3vw, 36px);
+}
+
+.playable-game-card--large .playable-game-card__title {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+}
+
+.playable-game-card__tags {
+  margin-top: 18px;
+}
+
+.playable-game-card__tags .tag {
+  background: #f9cc61;
+  color: #000;
+}
+
+@media (max-width: 620px) {
+  .games-page__listing {
+    padding-top: 36px;
+  }
+
+  .playable-game-card--large {
+    min-height: clamp(320px, 96vw, 390px);
+    border-radius: 26px;
+  }
+}
+
 .project-group__meta {
   margin: 0 0 8px;
   color: #f9cc61;
