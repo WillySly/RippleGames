@@ -186,13 +186,13 @@ function homepageNewsCard(post) {
 
 async function renderHomepageNews(config, cachedData = null) {
   const container = document.getElementById('homepage-news-content');
-  let posts = (cachedData?.posts || []).slice(0, 3);
+  let posts = (cachedData?.posts || []).slice(0, 4);
   if (!cachedData) {
     posts = await queryTable(config, 'news_posts', {
       select: 'id,title,slug,news_date,short_summary,cover_image_path,status',
       status: 'eq.published',
       order: 'news_date.desc',
-      limit: '3',
+      limit: '4',
     });
     posts = posts.map((post) => ({
       ...post,
@@ -202,7 +202,7 @@ async function renderHomepageNews(config, cachedData = null) {
 
   container.replaceChildren();
   if (posts.length) {
-    const grid = element('div', `homepage-news__grid homepage-news__grid--${posts.length}`);
+    const grid = element('div', 'homepage-news__grid');
     grid.append(...posts.map(homepageNewsCard));
     container.append(grid);
   }
@@ -718,7 +718,7 @@ function validCachedData(page, data) {
   }
   if (page === 'home') {
     return Array.isArray(data.posts)
-      && data.posts.length <= 3
+      && data.posts.length <= 4
       && data.posts.every((post) => post?.status === 'published');
   }
   if (page === 'games') {
