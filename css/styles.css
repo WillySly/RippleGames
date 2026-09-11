@@ -1228,7 +1228,6 @@ body {
 
 .games-page__listing {
   padding-top: clamp(44px, 7vw, 76px);
-  border:none;
 }
 
 .games-page__grid {
@@ -1240,6 +1239,7 @@ body {
   min-height: clamp(360px, 42vw, 500px);
   border: 1px solid var(--border);
   border-radius: 32px;
+  border:none;
 }
 
 .playable-game-card--large .playable-game-card__content {
