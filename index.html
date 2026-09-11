@@ -8,13 +8,8 @@
   <link rel="icon" href="img/maria.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="img/maria.png" sizes="180x180">
   <link rel="shortcut icon" href="img/maria.png">
-  <link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css"
-/>
-<script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
 </head>
-<body>
+<body data-content-page="home">
 
 <nav class="navbar">
   <div class="navbar-container">
@@ -95,46 +90,18 @@
     </div>
   </section>
 
-  <section class="games-showcase" id="games">
+  <section class="homepage-news" id="latest-news" aria-labelledby="latest-news-heading">
     <div class="divider-title">
-      <h2>MORE GAMES</h2>
+      <h2 id="latest-news-heading">LATEST NEWS</h2>
     </div>
-  
-    <div class="swiper">
-      <div class="swiper-wrapper">
-        <!-- Slides -->
-        <div class="image-card swiper-slide" style="background-image: url('img/game-cards/ChompocalypseCard.png'); cursor: pointer;" onclick="window.location='/game-chompo-calypse.html'">
-          <div class="image-card__content card-content">
-            <h2 class="image-card__title card-title">CHOMPO-CALYPSE</h2>
-            <div class="card-tags">
-                <a href="/search.html?q=UNDP">
-             <span class="tag">#UNDP</span>
-                </a>
-                
-                <a href="/search.html?q=E-Waste">
-            <span class="tag">#E-Waste</span>
-                </a>
-                
-                <a href="/search.html?q=Educational">
-            <span class="tag">#Educational</span>
-                </a>
-                
-                <a href="/search.html?q=RippleGames">
-            <span class="tag">#RippleGames</span>
-                </a>
-            </div>
-          </div>    
-        
-        </div>
 
-        </div>
-        <div class="swiper-pagination"></div>
+    <div class="homepage-news__content" id="homepage-news-content" data-content-root>
+      <p class="homepage-news__loading" role="status">Loading latest news…</p>
     </div>
-    
+
     <div class="divider">
-      <a class="divider__link" href="/games.html">View all games</a>
+      <a class="divider__link" href="/news.html">View all news</a>
     </div>
-
   </section>
   
   
@@ -188,34 +155,8 @@
   </section>
 </main>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const swiper = new Swiper(".swiper", {
-      loop: true,
-      slidesPerView: 1,
-      spaceBetween: 16,
-
-      pagination: {
-        el: ".swiper-pagination",
-        dynamicBullets: true,
-        clickable: true
-      },
-
-      breakpoints: {
-        600: {
-          slidesPerView: 2,
-          spaceBetween: 20,
-        },
-        1024: {
-          slidesPerView: 3,
-          spaceBetween: 24,
-        },
-      },
-    });
-
-  });
-</script>
 <script src="js/navigation.js"></script>
+<script type="module" src="js/public-content.js"></script>
 
 </body>
 </html>

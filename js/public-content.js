@@ -156,6 +156,59 @@ function listingCard(item, type, href, imageUrl = '', modifiers = '') {
   return card;
 }
 
+function homepageNewsCard(post) {
+  const card = element('a', 'homepage-news-card');
+  card.href = `/news/${encodeURIComponent(post.slug)}`;
+
+  const media = element('div', 'homepage-news-card__media');
+  if (post.coverUrl) {
+    const image = element('img', 'homepage-news-card__image');
+    image.src = post.coverUrl;
+    image.alt = `${post.title} cover`;
+    image.loading = 'lazy';
+    media.append(image);
+  }
+
+  const body = element('div', 'homepage-news-card__body');
+  if (post.news_date) {
+    const date = element('time', 'homepage-news-card__date', formatDate(post.news_date));
+    date.dateTime = post.news_date;
+    body.append(date);
+  }
+  body.append(element('h3', 'homepage-news-card__title', post.title));
+  if (post.short_summary) {
+    body.append(element('p', 'homepage-news-card__summary', post.short_summary));
+  }
+
+  card.append(media, body);
+  return card;
+}
+
+async function renderHomepageNews(config, cachedData = null) {
+  const container = document.getElementById('homepage-news-content');
+  let posts = (cachedData?.posts || []).slice(0, 3);
+  if (!cachedData) {
+    posts = await queryTable(config, 'news_posts', {
+      select: 'id,title,slug,news_date,short_summary,cover_image_path,status',
+      status: 'eq.published',
+      order: 'news_date.desc',
+      limit: '3',
+    });
+    posts = posts.map((post) => ({
+      ...post,
+      coverUrl: publicImageUrl(config, NEWS_BUCKET, post.cover_image_path),
+    }));
+  }
+
+  container.replaceChildren();
+  if (posts.length) {
+    const grid = element('div', `homepage-news__grid homepage-news__grid--${posts.length}`);
+    grid.append(...posts.map(homepageNewsCard));
+    container.append(grid);
+  }
+  return { posts };
+}
+
 async function renderProjects(config, cachedData = null) {
   const container = document.getElementById('projects-content');
   let groups = cachedData?.groups || [];
@@ -609,6 +662,11 @@ function validCachedData(page, data) {
       && Array.isArray(data.projects)
       && data.projects.every((project) => project?.status === 'published');
   }
+  if (page === 'home') {
+    return Array.isArray(data.posts)
+      && data.posts.length <= 3
+      && data.posts.every((post) => post?.status === 'published');
+  }
   if (page === 'news') {
     return Array.isArray(data.posts) && data.posts.every((post) => post?.status === 'published');
   }
@@ -630,6 +688,7 @@ function validCachedData(page, data) {
 }
 
 async function renderPage(page, config, cachedData = null) {
+  if (page === 'home') return renderHomepageNews(config, cachedData);
   if (page === 'projects') return renderProjects(config, cachedData);
   if (page === 'news') return renderNewsListing(config, cachedData);
   if (page === 'project-detail') return renderProjectDetail(config, cachedData);
