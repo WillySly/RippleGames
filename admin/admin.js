@@ -78,6 +78,8 @@ const elements = {
   newsSummaryCount: document.getElementById('news-summary-count'),
   newsCoverInput: document.getElementById('news-cover-image'),
   newsCoverPreview: document.getElementById('news-cover-preview'),
+  newsGalleryInput: document.getElementById('news-gallery-images'),
+  newsGalleryPreview: document.getElementById('news-gallery-preview'),
   newsTags: document.getElementById('news-tags'),
   newsProjects: document.getElementById('news-projects'),
   newsGames: document.getElementById('news-games'),
@@ -103,6 +105,9 @@ const state = {
   newsCoverSignedUrl: '',
   pendingNewsCover: null,
   removeNewsCover: false,
+  existingNewsGallery: [],
+  removedNewsGallery: [],
+  pendingNewsGallery: [],
   newsObjectUrls: [],
   newsSlugManuallyEdited: false,
   currentGame: null,
@@ -289,6 +294,8 @@ function captureNewsDraft() {
     gameIds: [...elements.newsGames.querySelectorAll('input:checked')].map((input) => input.value),
     pendingCover: state.pendingNewsCover,
     removeCover: state.removeNewsCover,
+    pendingGallery: state.pendingNewsGallery,
+    removedGalleryIds: state.removedNewsGallery.map((image) => image.id),
     slugManuallyEdited: state.newsSlugManuallyEdited,
     savedAt: new Date().toISOString(),
   };
@@ -1278,8 +1285,13 @@ function resetNewsMediaState() {
   state.newsCoverSignedUrl = '';
   state.pendingNewsCover = null;
   state.removeNewsCover = false;
+  state.existingNewsGallery = [];
+  state.removedNewsGallery = [];
+  state.pendingNewsGallery = [];
   elements.newsCoverInput.value = '';
+  elements.newsGalleryInput.value = '';
   elements.newsCoverPreview.replaceChildren();
+  elements.newsGalleryPreview.replaceChildren();
 }
 
 function newsObjectUrl(file) {
@@ -1335,6 +1347,27 @@ function renderNewsCoverPreview() {
   }
 }
 
+function renderNewsGalleryPreview() {
+  elements.newsGalleryPreview.replaceChildren();
+  state.existingNewsGallery
+    .filter((image) => !state.removedNewsGallery.some((removed) => removed.id === image.id))
+    .forEach((image, index) => {
+      elements.newsGalleryPreview.append(previewCard(image.signedUrl, `Gallery image ${index + 1}`, () => {
+        state.removedNewsGallery.push(image);
+        renderNewsGalleryPreview();
+        scheduleNewsDraftSave();
+      }));
+    });
+
+  state.pendingNewsGallery.forEach((file, index) => {
+    elements.newsGalleryPreview.append(previewCard(newsObjectUrl(file), file.name, () => {
+      state.pendingNewsGallery.splice(index, 1);
+      renderNewsGalleryPreview();
+      scheduleNewsDraftSave();
+    }));
+  });
+}
+
 function updateNewsCounters() {
   elements.newsSummaryCount.textContent = String(elements.newsSummary.value.length);
 }
@@ -1361,13 +1394,14 @@ async function openNewsForm(newsId = null, { persistDraft = true } = {}) {
   }
 
   showOnly('loading');
-  const [newsResult, tagsResult, projectsResult, gamesResult] = await Promise.all([
+  const [newsResult, tagsResult, projectsResult, gamesResult, galleryResult] = await Promise.all([
     supabase.from('news_posts').select('*').eq('id', newsId).single(),
     supabase.from('news_tags').select('tags(name)').eq('news_id', newsId),
     supabase.from('news_projects').select('project_id').eq('news_id', newsId),
     supabase.from('news_games').select('game_id').eq('news_id', newsId),
+    supabase.from('news_gallery_images').select('*').eq('news_id', newsId).order('sort_order'),
   ]);
-  const error = newsResult.error || tagsResult.error || projectsResult.error || gamesResult.error;
+  const error = newsResult.error || tagsResult.error || projectsResult.error || gamesResult.error || galleryResult.error;
   if (error) {
     showOnly('dashboard');
     setMessage(elements.dashboardMessage, formatError(error, 'News post could not be loaded.'), true);
@@ -1376,6 +1410,7 @@ async function openNewsForm(newsId = null, { persistDraft = true } = {}) {
 
   const post = newsResult.data;
   state.currentNews = post;
+  state.existingNewsGallery = galleryResult.data || [];
   elements.newsFormTitle.textContent = 'Edit News Post';
   document.getElementById('news-id').value = post.id;
   elements.newsTitle.value = post.title;
@@ -1390,11 +1425,17 @@ async function openNewsForm(newsId = null, { persistDraft = true } = {}) {
   updateNewsCounters();
 
   try {
-    state.newsCoverSignedUrl = await signedUrl(post.cover_image_path, NEWS_STORAGE_BUCKET);
+    const urls = await Promise.all([
+      signedUrl(post.cover_image_path, NEWS_STORAGE_BUCKET),
+      ...state.existingNewsGallery.map((image) => signedUrl(image.storage_path, NEWS_STORAGE_BUCKET)),
+    ]);
+    state.newsCoverSignedUrl = urls[0];
+    state.existingNewsGallery = state.existingNewsGallery.map((image, index) => ({ ...image, signedUrl: urls[index + 1] }));
   } catch (error) {
-    setMessage(elements.newsFormMessage, formatError(error, 'The cover image preview could not be loaded.'), true);
+    setMessage(elements.newsFormMessage, formatError(error, 'Some image previews could not be loaded.'), true);
   }
   renderNewsCoverPreview();
+  renderNewsGalleryPreview();
   showOnly('newsForm');
   if (persistDraft) await persistNewsDraft();
   return true;
@@ -1425,9 +1466,13 @@ async function restoreNewsDraft() {
   populateGameSelector(elements.newsGames, 'game_ids', Array.isArray(draft.gameIds) ? draft.gameIds : []);
   state.pendingNewsCover = draft.pendingCover || null;
   state.removeNewsCover = Boolean(draft.removeCover);
+  state.pendingNewsGallery = Array.isArray(draft.pendingGallery) ? draft.pendingGallery : [];
+  state.removedNewsGallery = state.existingNewsGallery.filter((image) =>
+    (draft.removedGalleryIds || []).includes(image.id));
   state.newsSlugManuallyEdited = Boolean(draft.slugManuallyEdited);
   updateNewsCounters();
   renderNewsCoverPreview();
+  renderNewsGalleryPreview();
   setMessage(elements.newsFormMessage, 'Unsaved local changes restored.');
   window.localStorage.setItem(ACTIVE_DRAFT_KEY, 'news');
   return true;
@@ -1514,6 +1559,36 @@ async function saveNews(event) {
       state.currentNews.cover_image_path = null;
     }
 
+    if (state.removedNewsGallery.length) {
+      const removedIds = state.removedNewsGallery.map((image) => image.id);
+      const removedPaths = state.removedNewsGallery.map((image) => image.storage_path);
+      const { error: rowsError } = await supabase.from('news_gallery_images').delete().in('id', removedIds);
+      if (rowsError) throw rowsError;
+      const { error: filesError } = await supabase.storage.from(NEWS_STORAGE_BUCKET).remove(removedPaths);
+      if (filesError) throw filesError;
+      state.existingNewsGallery = state.existingNewsGallery.filter((image) => !removedIds.includes(image.id));
+      state.removedNewsGallery = [];
+    }
+
+    let nextOrder = state.existingNewsGallery.length
+      ? Math.max(...state.existingNewsGallery.map((image) => image.sort_order)) + 1
+      : 0;
+    while (state.pendingNewsGallery.length) {
+      const file = state.pendingNewsGallery[0];
+      const path = await uploadImage(newsId, 'gallery', file, NEWS_STORAGE_BUCKET);
+      const { error } = await supabase.from('news_gallery_images').insert({
+        news_id: newsId,
+        storage_path: path,
+        sort_order: nextOrder,
+      });
+      if (error) {
+        await supabase.storage.from(NEWS_STORAGE_BUCKET).remove([path]);
+        throw error;
+      }
+      state.pendingNewsGallery.shift();
+      nextOrder += 1;
+    }
+
     await clearNewsDraft();
     resetNewsMediaState();
     showOnly('dashboard');
@@ -1527,18 +1602,29 @@ async function saveNews(event) {
 }
 
 async function deleteNews(post) {
-  if (!window.confirm(`Delete the News post “${post.title}”? This also removes its cover image.`)) return;
+  if (!window.confirm(`Delete the News post “${post.title}”? This also removes its uploaded images.`)) return;
   setMessage(elements.dashboardMessage, 'Deleting News post…');
+
+  const { data: gallery, error: galleryError } = await supabase
+    .from('news_gallery_images')
+    .select('storage_path')
+    .eq('news_id', post.id);
+  if (galleryError) {
+    setMessage(elements.dashboardMessage, formatError(galleryError, 'News images could not be checked.'), true);
+    return;
+  }
+
   const { error: deleteError } = await supabase.from('news_posts').delete().eq('id', post.id);
   if (deleteError) {
     setMessage(elements.dashboardMessage, formatError(deleteError, 'News post could not be deleted.'), true);
     return;
   }
-  if (post.cover_image_path) {
-    const { error: storageError } = await supabase.storage.from(NEWS_STORAGE_BUCKET).remove([post.cover_image_path]);
+  const paths = [post.cover_image_path, ...(gallery || []).map((image) => image.storage_path)].filter(Boolean);
+  if (paths.length) {
+    const { error: storageError } = await supabase.storage.from(NEWS_STORAGE_BUCKET).remove(paths);
     if (storageError) {
-      await loadDashboard('News post deleted, but its stored cover image could not be removed.');
-      setMessage(elements.dashboardMessage, 'News post deleted, but its stored cover image could not be removed.', true);
+      await loadDashboard('News post deleted, but some stored images could not be removed.');
+      setMessage(elements.dashboardMessage, 'News post deleted, but some stored images could not be removed.', true);
       return;
     }
   }
@@ -1750,6 +1836,20 @@ elements.newsCoverInput.addEventListener('change', () => {
     scheduleNewsDraftSave();
   } catch (error) {
     elements.newsCoverInput.value = '';
+    setMessage(elements.newsFormMessage, error.message, true);
+  }
+});
+elements.newsGalleryInput.addEventListener('change', () => {
+  try {
+    const files = [...elements.newsGalleryInput.files];
+    files.forEach(validateImage);
+    state.pendingNewsGallery.push(...files);
+    elements.newsGalleryInput.value = '';
+    renderNewsGalleryPreview();
+    setMessage(elements.newsFormMessage);
+    scheduleNewsDraftSave();
+  } catch (error) {
+    elements.newsGalleryInput.value = '';
     setMessage(elements.newsFormMessage, error.message, true);
   }
 });

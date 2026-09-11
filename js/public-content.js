@@ -399,7 +399,7 @@ async function renderGames(config, cachedData = null) {
   return { games };
 }
 
-function galleryCarousel(urls, projectTitle) {
+function galleryCarousel(urls, contentTitle) {
   const section = element('section', 'content-section content-detail__section');
   const header = element('div', 'gallery-heading');
   header.append(element('h2', 'content-section__heading', 'Gallery'));
@@ -418,7 +418,7 @@ function galleryCarousel(urls, projectTitle) {
   const track = element('div', 'content-gallery');
   const dialog = document.createElement('dialog');
   dialog.className = 'gallery-lightbox';
-  dialog.setAttribute('aria-label', `${projectTitle} gallery image viewer`);
+  dialog.setAttribute('aria-label', `${contentTitle} gallery image viewer`);
   const close = element('button', 'gallery-lightbox__close', '×');
   const lightboxPrevious = element('button', 'gallery-lightbox__arrow gallery-lightbox__arrow--previous', '←');
   const lightboxNext = element('button', 'gallery-lightbox__arrow gallery-lightbox__arrow--next', '→');
@@ -433,7 +433,7 @@ function galleryCarousel(urls, projectTitle) {
   const showImage = (index) => {
     currentIndex = (index + urls.length) % urls.length;
     lightboxImage.src = urls[currentIndex];
-    lightboxImage.alt = `${projectTitle} gallery image ${currentIndex + 1}`;
+    lightboxImage.alt = `${contentTitle} gallery image ${currentIndex + 1}`;
     counter.textContent = `${currentIndex + 1} / ${urls.length}`;
   };
 
@@ -443,7 +443,7 @@ function galleryCarousel(urls, projectTitle) {
     imageButton.setAttribute('aria-label', `Open gallery image ${index + 1}`);
     const image = element('img');
     image.src = url;
-    image.alt = `${projectTitle} gallery image ${index + 1}`;
+    image.alt = `${contentTitle} gallery image ${index + 1}`;
     image.loading = 'lazy';
     imageButton.append(image);
     imageButton.addEventListener('click', () => {
@@ -554,10 +554,11 @@ async function renderNewsDetail(config, cachedData = null) {
   }
   let post = cachedData?.post || null;
   let coverUrl = cachedData?.coverUrl || '';
+  let galleryUrls = cachedData?.galleryUrls || [];
   let linkedGames = cachedData?.linkedGames || [];
   if (!cachedData) {
     const rows = await queryTable(config, 'news_posts', {
-      select: 'id,title,slug,news_date,short_summary,cover_image_path,body_html,status,news_tags(tags(name)),news_projects(projects(title,slug)),news_games(games(title,slug,cover_image_path,playable_url,is_active))',
+      select: 'id,title,slug,news_date,short_summary,cover_image_path,body_html,status,news_tags(tags(name)),news_projects(projects(title,slug)),news_gallery_images(storage_path,sort_order),news_games(games(title,slug,cover_image_path,playable_url,is_active))',
       slug: `eq.${slug}`,
       status: 'eq.published',
       limit: '1',
@@ -570,8 +571,10 @@ async function renderNewsDetail(config, cachedData = null) {
     return null;
   }
 
+  const gallery = [...(post.news_gallery_images || [])].sort((a, b) => a.sort_order - b.sort_order);
   if (!cachedData) {
     coverUrl = publicImageUrl(config, NEWS_BUCKET, post.cover_image_path);
+    galleryUrls = gallery.map((image) => publicImageUrl(config, NEWS_BUCKET, image.storage_path));
     linkedGames = (post.news_games || [])
       .map((row) => row.games)
       .filter((game) => game?.is_active)
@@ -594,10 +597,14 @@ async function renderNewsDetail(config, cachedData = null) {
   }
   const games = playableGamesSection(linkedGames);
   if (games) container.append(games);
+  const validGallery = galleryUrls.filter(Boolean);
+  if (validGallery.length) {
+    container.append(galleryCarousel(validGallery, post.title));
+  }
   const projects = (post.news_projects || []).map((row) => row.projects).filter(Boolean);
   const related = relatedLinks('Related Projects', projects, 'projects');
   if (related) container.append(related);
-  return { post, coverUrl, linkedGames };
+  return { post, coverUrl, galleryUrls, linkedGames };
 }
 
 function searchResultCard(item) {

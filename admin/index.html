@@ -351,6 +351,14 @@
         </fieldset>
 
         <fieldset>
+          <legend>Gallery</legend>
+          <label for="news-gallery-images">Upload images</label>
+          <input id="news-gallery-images" name="gallery_images" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple />
+          <p class="field-help">Select multiple images. Maximum 10 MB per image.</p>
+          <div class="gallery-grid" id="news-gallery-preview"></div>
+        </fieldset>
+
+        <fieldset>
           <legend>Tags</legend>
           <label for="news-tags">Tags</label>
           <input id="news-tags" name="tags" type="text" placeholder="Game, Education, Event" />
