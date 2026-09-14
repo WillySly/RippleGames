@@ -8,6 +8,9 @@
   --btn-shadow: rgba(220,80,60,.35);
   --content-max: 1100px;
   --gutter: 40px;
+  --public-page-background:
+    radial-gradient(circle at 88% 6%, rgba(23, 112, 123, 0.34), transparent 34rem),
+    linear-gradient(115deg, #020708 0%, #051214 48%, #092b30 100%);
 }
 
 *{box-sizing:border-box} html,body{margin:0;height:100%} body{font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto; color:var(--fg); }
@@ -1026,7 +1029,7 @@ body[data-content-page="games"] .content-page,
 body[data-content-page="projects"] .content-page,
 body[data-content-page="news"] .content-page,
 .what-we-do-page {
-  background: #000 url('../img/bg2.png') center/cover no-repeat;
+  background: var(--public-page-background);
 }
 
 .what-we-do__hero {
