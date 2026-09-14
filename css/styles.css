@@ -427,7 +427,7 @@ body {
   display: flex;
   width: min(calc(100% - 40px), var(--content-max));
   margin: 0 auto;
-  padding: clamp(58px, 8vw, 96px) 0 clamp(52px, 7vw, 84px);
+  padding: clamp(58px, 8vw, 96px) 0;
   align-items: center;
   justify-content: center;
 }
@@ -1020,9 +1020,13 @@ body {
 
 .what-we-do-page {
   overflow: hidden;
-  background:
-    radial-gradient(circle at 88% 10%, rgba(156, 50, 30, 0.24), transparent 32rem),
-    linear-gradient(180deg, #080808 0%, #160b08 48%, #080808 100%);
+}
+
+body[data-content-page="games"] .content-page,
+body[data-content-page="projects"] .content-page,
+body[data-content-page="news"] .content-page,
+.what-we-do-page {
+  background: #000 url('../img/bg2.png') center/cover no-repeat;
 }
 
 .what-we-do__hero {
@@ -1070,6 +1074,11 @@ body {
   min-height: 0;
   padding: clamp(42px, 6vw, 68px) 0;
   border-top: 1px solid var(--border);
+}
+
+.what-we-do__service:nth-child(-n + 2) {
+  border-top: 0;
+  padding-top: clamp(28px, 4vw, 46px);
 }
 
 .what-we-do__service::before {
@@ -1159,6 +1168,11 @@ body {
 
   .what-we-do__service {
     padding: 42px 0;
+  }
+
+  .what-we-do__service:nth-child(2) {
+    border-top: 1px solid var(--border);
+    padding-top: 42px;
   }
 }
 
