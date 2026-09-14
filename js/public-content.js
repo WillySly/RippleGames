@@ -150,7 +150,9 @@ function listingCard(item, type, href, imageUrl = '', modifiers = '') {
   if (imageUrl) card.style.backgroundImage = `url("${imageUrl.replaceAll('"', '%22')}")`;
   const body = element('div', 'image-card__content listing-card__body');
   if (type) body.append(element('span', 'listing-card__type', type));
-  body.append(element('h3', 'image-card__title listing-card__title', item.title));
+  const title = element('h3', 'image-card__title listing-card__title');
+  title.append(element('span', 'listing-card__title-text', item.title));
+  body.append(title);
   if (item.short_summary) body.append(element('p', 'image-card__description listing-card__description', item.short_summary));
   card.append(body);
   return card;
@@ -275,7 +277,7 @@ async function renderNewsListing(config, cachedData = null) {
   const section = element('section', 'content-section');
   const grid = element('div', 'content-grid');
   posts.forEach((post) => {
-    grid.append(listingCard(post, formatDate(post.news_date), `/news/${encodeURIComponent(post.slug)}`, post.coverUrl));
+    grid.append(listingCard(post, formatDate(post.news_date), `/news/${encodeURIComponent(post.slug)}`, post.coverUrl, 'image-card--news'));
   });
   section.append(grid);
   container.append(section);
@@ -503,7 +505,7 @@ async function renderProjectDetail(config, cachedData = null) {
   }
   if (!project) {
     container.replaceChildren(emptyState('Project not found', 'This Project does not exist or is not published.'));
-    document.title = 'Project not found – Ripple Games';
+    document.title = 'Project not found – RippleGames';
     return null;
   }
 
@@ -516,7 +518,7 @@ async function renderProjectDetail(config, cachedData = null) {
       .filter((game) => game?.is_active)
       .map((game) => ({ ...game, coverUrl: publicImageUrl(config, GAME_BUCKET, game.cover_image_path) }));
   }
-  document.title = `${project.title} – Ripple Games`;
+  document.title = `${project.title} – RippleGames`;
   container.replaceChildren(detailHeader(project.project_groups?.name || 'Project', project.title, project.short_summary));
   const tags = tagsNode(project.project_tags);
   if (tags) container.append(tags);
@@ -567,7 +569,7 @@ async function renderNewsDetail(config, cachedData = null) {
   }
   if (!post) {
     container.replaceChildren(emptyState('News post not found', 'This News post does not exist or is not published.'));
-    document.title = 'News post not found – Ripple Games';
+    document.title = 'News post not found – RippleGames';
     return null;
   }
 
@@ -580,7 +582,7 @@ async function renderNewsDetail(config, cachedData = null) {
       .filter((game) => game?.is_active)
       .map((game) => ({ ...game, coverUrl: publicImageUrl(config, GAME_BUCKET, game.cover_image_path) }));
   }
-  document.title = `${post.title} – Ripple Games`;
+  document.title = `${post.title} – RippleGames`;
   container.replaceChildren(detailHeader(formatDate(post.news_date), post.title, post.short_summary));
   const tags = tagsNode(post.news_tags);
   if (tags) container.append(tags);
