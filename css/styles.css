@@ -418,6 +418,53 @@ body {
 
 }
 
+.what-we-do-teaser {
+  padding: clamp(34px, 5vw, 58px) 20px;
+  background: #000;
+}
+
+.what-we-do-teaser__inner {
+  display: flex;
+  width: min(100%, var(--content-max));
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 38px) 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.what-we-do-teaser__inner p {
+  max-width: 760px;
+  margin: 0;
+  color: #fff;
+  font: clamp(1.05rem, 2vw, 1.35rem)/1.55 'FiraGo-Heavy', sans-serif;
+}
+
+.what-we-do-teaser__inner a {
+  flex: none;
+  padding: 10px 18px;
+  border: 2px solid #f9cc61;
+  border-radius: 999px;
+  color: #f9cc61;
+  font-weight: 800;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.what-we-do-teaser__inner a:hover,
+.what-we-do-teaser__inner a:focus-visible {
+  background: #f9cc61;
+  color: #111;
+}
+
+@media (max-width: 700px) {
+  .what-we-do-teaser__inner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .featured__card {
   position: relative;
   width: 100%;
@@ -988,6 +1035,145 @@ body {
   margin: 24px 0 0;
   color: var(--muted);
   font-size: clamp(1rem, 2vw, 1.2rem);
+}
+
+.what-we-do-page {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 88% 10%, rgba(220, 74, 38, 0.24), transparent 30rem),
+    radial-gradient(circle at 8% 72%, rgba(249, 204, 97, 0.08), transparent 28rem),
+    #080808;
+}
+
+.what-we-do__hero {
+  padding-bottom: clamp(54px, 8vw, 96px);
+}
+
+.what-we-do__hero .content-page__title {
+  max-width: 900px;
+}
+
+.what-we-do__intro {
+  max-width: 790px;
+  margin-top: clamp(34px, 5vw, 58px);
+  color: var(--muted);
+  font-size: clamp(1.08rem, 2vw, 1.3rem);
+  line-height: 1.75;
+}
+
+.what-we-do__intro p {
+  margin: 0;
+}
+
+.what-we-do__intro p + p {
+  margin-top: 22px;
+}
+
+.what-we-do__intro p:first-child,
+.what-we-do__intro p:last-child {
+  color: #fff;
+  font-family: 'FiraGo-Heavy', sans-serif;
+}
+
+.what-we-do__services {
+  display: grid;
+  width: min(calc(100% - 40px), var(--content-max));
+  margin: 0 auto;
+  padding: clamp(62px, 9vw, 112px) 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(24px, 4vw, 42px);
+}
+
+.what-we-do__service {
+  position: relative;
+  min-height: 285px;
+  padding: clamp(32px, 5vw, 54px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(220, 74, 38, 0.2), transparent 15rem),
+    rgba(255, 255, 255, 0.035);
+}
+
+.what-we-do__service::before {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 5px;
+  margin-bottom: 28px;
+  border-radius: 999px;
+  background: #f9cc61;
+}
+
+.what-we-do__service h2,
+.what-we-do__open-ended h2 {
+  margin: 0;
+  font: clamp(1.65rem, 3vw, 2.55rem)/1.08 'FiraGo-Heavy', sans-serif;
+}
+
+.what-we-do__service p,
+.what-we-do__open-ended p {
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.what-we-do__service--wide {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
+.what-we-do__closing {
+  display: grid;
+  width: min(calc(100% - 40px), var(--content-max));
+  margin: 0 auto;
+  padding: clamp(58px, 9vw, 110px) 0;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+  gap: clamp(38px, 7vw, 90px);
+  border-top: 1px solid var(--border);
+}
+
+.what-we-do__open-ended {
+  padding: clamp(28px, 4vw, 44px);
+  border: 1px solid rgba(249, 204, 97, 0.5);
+  border-radius: 28px;
+  background: rgba(249, 204, 97, 0.07);
+}
+
+.what-we-do__final {
+  align-self: center;
+}
+
+.what-we-do__final p {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.5vw, 2.8rem);
+  line-height: 1.25;
+}
+
+.what-we-do__final strong {
+  color: #f9cc61;
+}
+
+.what-we-do__final p:last-child {
+  margin-top: 28px;
+  font-family: 'FiraGo-Heavy', sans-serif;
+}
+
+@media (max-width: 760px) {
+  .what-we-do__services,
+  .what-we-do__closing {
+    grid-template-columns: 1fr;
+  }
+
+  .what-we-do__service--wide {
+    grid-column: auto;
+  }
+
+  .what-we-do__service {
+    min-height: 0;
+  }
 }
 
 .content-section {
