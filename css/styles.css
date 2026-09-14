@@ -427,10 +427,11 @@ body {
 }
 
 .what-we-do-teaser__inner {
+  --teaser-balance-space: clamp(58px, 8vw, 96px);
   display: flex;
   width: min(calc(100% - 40px), var(--content-max));
   margin: 0 auto;
-  padding: clamp(58px, 8vw, 96px) 0;
+  padding: var(--teaser-balance-space) 0 calc(var(--teaser-balance-space) - 52px);
   align-items: center;
   justify-content: center;
 }
@@ -1066,7 +1067,7 @@ body[data-content-page="news"] .content-page,
   display: grid;
   width: min(calc(100% - 40px), var(--content-max));
   margin: 0 auto;
-  padding: clamp(62px, 9vw, 112px) 0;
+  padding: clamp(28px, 4vw, 48px) 0 clamp(62px, 9vw, 112px);
   grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: clamp(48px, 8vw, 96px);
   row-gap: 0;
